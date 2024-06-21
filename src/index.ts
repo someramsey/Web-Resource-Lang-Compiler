@@ -1,15 +1,9 @@
 import fs from "fs";
+import { Iteration } from "./iteration";
+import { lexer } from "./processors/lexer";
 
 const data = fs.readFileSync("data/sample", "utf-8");
 
-const iterator = data[Symbol.iterator]();
 
 
-let next = iterator.next();
-
-while(next.done) {
-    
-    next = iterator.next();
-}
-
-
+lexer(data);

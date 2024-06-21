@@ -6,6 +6,7 @@
         "outDir": "./out",
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
+        "isolatedModules": true,
         "resolveJsonModule": true,
         "noImplicitAny": false,
         "strict": true,

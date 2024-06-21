@@ -6,4 +6,5 @@ const data = fs.readFileSync("data/sample", "utf-8");
 
 
 
-lexer(data);
+console.log(lexer(data));
+while (true);

@@ -1,0 +1,10 @@
+lexer
+tokenization:
+    firstpass tokenizer: splits tokens into strings, numbers, keywords, operators and symbols
+    secondpass tokenizer: all the clumped braces, brackers parantheses and groups the tokens inside them
+
+
+
+parser: parses the tokens into statements and expressions
+resolver: resolves the identifiers and variables
+

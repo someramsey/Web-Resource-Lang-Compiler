@@ -27,6 +27,30 @@ export function tokenizer(input: string): Token[] {
     let char: string;
     let captured: boolean = false;
 
+    const capture = () => {
+        if (symbols.includes(char)) return () => {
+            result.push({
+                kind: "symbol",
+                value: char,
+                range: Range.from(foot, head)
+            });
+        };
+
+    };
+
+    const pushUncaptured = () => {
+        if (!captured) {
+            result.push({
+                kind: "none",
+                value: input.substring(head.index, foot.index),
+                range: Range.from(foot, head)
+            });
+
+            captured = false;
+            foot = { ...head };
+        }
+    };
+
     while (char = iteration.next()) {
         head.index++;
 
@@ -38,27 +62,18 @@ export function tokenizer(input: string): Token[] {
         }
 
         if (breaks.includes(char)) {
-            if (!captured) {
-                //push uncaptured
-            }
-
-            foot = { ...head };
-            captured = true;
-
+            pushUncaptured();
             continue;
         }
-        else if (symbols.includes(char)) {
-            if (!captured) {
-                //push uncaptured
-            }
 
-            foot = { ...head, index: head.index - 1 };
+        const capturer = capture();
 
-            //push symbol
-
-            foot = { ...head };
+        if (capturer) {
+            pushUncaptured();
+            capturer();
+            
             captured = true;
-
+            foot = { ...head };
             continue;
         }
 

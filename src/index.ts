@@ -1,10 +1,10 @@
 import fs from "fs";
 import { Iteration } from "./iteration";
-import { lexer } from "./processors/lexer";
+import { tokenizer } from "./processors/tokenizer";
 
 const data = fs.readFileSync("data/sample", "utf-8");
 
 
 
-console.log(lexer(data));
+console.log(tokenizer(data));
 while (true);

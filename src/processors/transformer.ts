@@ -1,32 +1,38 @@
 import { Iteration } from "../iteration";
-import { ProcessorResult } from "../processor"; 
 import { Token } from "./tokenizer";
 
-let predicate: ((token: Token) => void) | null;
+type Node = Token | {
+    kind: "group" | "array" | "block"
+};
 
-function group(token: Token) {
-    console.log(token);
-    if (token.kind === "symbol" && token.value === ")") {
-        predicate = null;
-    }
-}
 
 export function transformer(tokens: Token[]) {
     const iteration = new Iteration(tokens);
+
+    const output: Node[] = [];
+    const errors: Error[] = [];
+
     let token: Token;
 
-    while (token = iteration.next()) {
-        if (predicate) {
-            predicate(token);
-            continue;
+    const group = () => {
+        while (token = iteration.next()) {
+            console.log(token);
+            if (token.kind === "symbol" && token.value === ")") {
+                return;
+            }
         }
+    };
 
+    while (token = iteration.next()) {
         if (token.kind === "symbol") {
             switch (token.value) {
-                case "(":
-                    predicate = group;
-                    break;
+                case "(": group(); break;
             }
         }
     }
+
+    return {
+        output,
+        errors
+    };
 }

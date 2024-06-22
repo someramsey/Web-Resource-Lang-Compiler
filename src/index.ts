@@ -6,6 +6,8 @@ import { transformer } from "./processors/transformer";
 const data = fs.readFileSync("data/.sample", "utf-8");
 
 const tokenizationResult = tokenizer(data);
-transformer(tokenizationResult.output);
+console.log(tokenizationResult);
+const transformerResult = transformer(tokenizationResult.output);
+console.log(transformerResult);
 
 while (true);

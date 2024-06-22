@@ -25,31 +25,28 @@ type StandartToken = {
 export type Token = StandartToken | ValueToken<"string", string> | ValueToken<"number", number>;
 
 export function tokenizer(input: string): ProcessorResult<Token[]> {
-    const iteration = new Iteration(input);
-
     const output: Token[] = [];
     const errors: ProcessorError[] = []
 
     let head: Position = { column: 0, line: 0, index: 0 };
     let foot: Position = { column: 0, line: 0, index: 0 };
 
-    let char: string;
     let captured: boolean = false;
 
     const string = () => {
         let escaped = false;
 
-        while (char = iteration.next()) {
+        while (head.index < input.length) {
+            const char = input[head.index];
+
             head.index++;
+            head.column++;
 
             if (char === "\n") {
                 head.line++;
                 head.column = 0;
 
-                errors.push({
-                    message: "Unterminated string literal",
-                    range: Range.from(foot, head)
-                });
+                errors.push(new ProcessorError("Unterminated string literal", Range.from(foot, head)));
             }
 
             if (!escaped) {
@@ -60,7 +57,7 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
                     output.push({
                         kind: "value",
                         type: "string",
-                        value: input.substring(foot.index, head.index),
+                        value: input.substring(foot.index, head.index - 1),
                         range: Range.from(foot, head)
                     });
 
@@ -72,15 +69,12 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
             }
         }
 
-        errors.push({
-            message: "Unterminated string literal",
-            range: Range.from(foot, head)
-        });
+        errors.push(new ProcessorError("Unterminated string literal at eof", Range.from(foot, head)));
     };
 
     const comment = () => {
-        while (char = iteration.next()) {
-            head.index++;
+        while (head.index < input.length) {
+            const char = input[head.index];
 
             if (char === "\n") {
                 head.line++;
@@ -88,12 +82,14 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
 
                 break;
             }
+
+            head.index++;
         }
     };
 
     const number = () => {
-        while (char = iteration.next()) {
-            head.index++;
+        while (head.index < input.length) {
+            const char = input[head.index];
 
             if (!digits.includes(char)) {
                 output.push({
@@ -105,17 +101,19 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
 
                 return;
             }
+
+            head.index++;
         }
     };
 
-    const capture = () => {
+    const capture = (char) => {
         switch (char) {
             case "'": return string;
             case "#": return comment;
         }
 
-        if(digits.includes(char)) return number;
-        
+        if (digits.includes(char)) return number;
+
         if (symbols.includes(char)) return () => {
             output.push({
                 kind: "symbol",
@@ -129,19 +127,24 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
         if (!captured) {
             output.push({
                 kind: "none",
-                value: input.substring(head.index, foot.index),
+                value: input.substring(foot.index, head.index - 1),
                 range: Range.from(foot, head)
             });
-
-            captured = false;
-            foot = { ...head };
         }
+
+        captured = true;
+        foot = { ...head };
     };
 
-    while (char = iteration.next()) {
+    while (head.index < input.length) {
+        const char = input[head.index];
+
         head.index++;
 
-        if (char === "\n") {
+        if (char === "\r") {
+            head.column = 0;
+            continue;
+        } else if (char === "\n") {
             head.line++;
             head.column = 0;
         } else {
@@ -153,13 +156,12 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
             continue;
         }
 
-        const capturer = capture();
+        const capturer = capture(char);
 
         if (capturer) {
             pushUncaptured();
             capturer();
 
-            captured = true;
             foot = { ...head };
             continue;
         }

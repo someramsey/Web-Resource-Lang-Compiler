@@ -12,7 +12,6 @@ type Compound<T> = {
 
 type Node = Token | Compound<"group" | "array" | "block">;
 
-
 export function transformer(tokens: Token[]) {
     const iteration = new Iteration(tokens);
 
@@ -86,7 +85,7 @@ export function transformer(tokens: Token[]) {
             last = token;
             nodes.push(transform(token));
 
-            if (token.kind === "symbol" && token.value === ")") {
+            if (token.kind === "symbol" && token.value === "}") {
                 return {
                     kind: "block",
                     children: nodes,
@@ -100,10 +99,14 @@ export function transformer(tokens: Token[]) {
 
     const transform = (token: Token): Node => {
         if (token.kind === "symbol") {
-            switch (token.value) {
-                case "(": return group(token);
-                case "[": return array(token);
-                case "{": return block(token);
+            try {
+                switch (token.value) {
+                    case "(": return group(token);
+                    case "[": return array(token);
+                    case "{": return block(token);
+                }
+            } catch (error) {
+                errors.push(error as ProcessorError);
             }
         }
 

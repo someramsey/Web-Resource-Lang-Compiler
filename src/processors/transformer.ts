@@ -3,13 +3,16 @@ import { ProcessorError } from "../processor";
 import { Range } from "../range";
 import { Token } from "./tokenizer";
 
-type Compound<T> = {
+
+type BaseCompound<T> = {
     kind: T;
     children: Node[];
     range: Range;
 };
 
-export type Node = Token | Compound<"group" | "array" | "block">;
+type Compound = BaseCompound<"array"> | BaseCompound<"group"> | BaseCompound<"block">;
+
+export type Node = Token | Compound;
 
 export function transformer(tokens: Token[]) {
     const iteration = new Iteration(tokens);
@@ -19,7 +22,7 @@ export function transformer(tokens: Token[]) {
 
     let token: Token;
 
-    const group = (beginToken: Token): Compound<"group"> => {
+    const group = (beginToken: Token): BaseCompound<"group"> => {
         const nodes: Node[] = [];
         let last;
 
@@ -39,7 +42,7 @@ export function transformer(tokens: Token[]) {
         throw new ProcessorError("Unclosed group", Range.from(beginToken.range.begin, last.range.end));
     };
 
-    const array = (beginToken: Token): Compound<"array"> => {
+    const array = (beginToken: Token): BaseCompound<"array"> => {
         const nodes: Node[] = [];
 
         let last;
@@ -76,7 +79,7 @@ export function transformer(tokens: Token[]) {
         throw new ProcessorError("Unclosed array", Range.from(beginToken.range.begin, last.range.end));
     };
 
-    const block = (beginToken: Token): Compound<"block"> => {
+    const block = (beginToken: Token): BaseCompound<"block"> => {
         const nodes: Node[] = [];
         let last;
 

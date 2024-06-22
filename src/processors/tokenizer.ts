@@ -5,17 +5,23 @@ import { Range } from "../range";
 const breaks = [" ", "\t", "\n", "\r"];
 const symbols = ["(", ")", "{", "}", "[", "]", ",", ";", ":", "."];
 
+
+type BaseToken = {
+    range: Range;
+}
+
 type ValueToken<Type, Value> = {
     kind: "value";
     type: Type;
     value: Value;
-}
+} & BaseToken;
 
-export type Token = {
+type StandartToken = {
     kind: "symbol" | "none";
     value: string;
-    range: Range
-} | ValueToken<"string", string> | ValueToken<"number", number>;
+} & BaseToken;
+
+export type Token = StandartToken | ValueToken<"string", string> | ValueToken<"number", number>;
 
 export function tokenizer(input: string): Token[] {
     const result: Token[] = [];
@@ -27,7 +33,64 @@ export function tokenizer(input: string): Token[] {
     let char: string;
     let captured: boolean = false;
 
+    const string = () => {
+        let escaped = false;
+
+        while (char = iteration.next()) {
+            head.index++;
+
+            if (char === "\n") {
+                head.line++;
+                head.column = 0;
+
+                //error unterminated string literal
+
+                return;
+            }
+
+            if (!escaped) {
+                if (char === "\\") {
+                    escaped = true;
+                }
+                else if (char == "'") {
+                    result.push({
+                        kind: "value",
+                        type: "string",
+                        value: input.substring(foot.index, head.index),
+                        range: Range.from(foot, head)
+                    });
+
+                    return;
+                }
+
+            } else {
+                escaped = false;
+            }
+        }
+
+
+        //error unterminated string literal at eof
+    };
+
+    const comment = () => {
+        while (char = iteration.next()) {
+            head.index++;
+
+            if (char === "\n") {
+                head.line++;
+                head.column = 0;
+
+                break;
+            }
+        }
+    }
+
     const capture = () => {
+        switch (char) {
+            case "'": return string;
+            case "#": return comment;
+        }
+
         if (symbols.includes(char)) return () => {
             result.push({
                 kind: "symbol",
@@ -35,7 +98,6 @@ export function tokenizer(input: string): Token[] {
                 range: Range.from(foot, head)
             });
         };
-
     };
 
     const pushUncaptured = () => {
@@ -71,7 +133,7 @@ export function tokenizer(input: string): Token[] {
         if (capturer) {
             pushUncaptured();
             capturer();
-            
+
             captured = true;
             foot = { ...head };
             continue;

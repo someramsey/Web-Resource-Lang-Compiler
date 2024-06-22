@@ -3,14 +3,13 @@ import { ProcessorError } from "../processor";
 import { Range } from "../range";
 import { Token } from "./tokenizer";
 
-
 type Compound<T> = {
     kind: T;
     children: Node[];
     range: Range;
 };
 
-type Node = Token | Compound<"group" | "array" | "block">;
+export type Node = Token | Compound<"group" | "array" | "block">;
 
 export function transformer(tokens: Token[]) {
     const iteration = new Iteration(tokens);

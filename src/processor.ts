@@ -1,9 +1,14 @@
 import { Range } from "./range";
 
-export type ProcessorError = {
-    message: string;
-    range: Range;
-};
+export class ProcessorError extends Error {
+    public range: Range;
+
+    constructor(message: string, range: Range) {
+        super(message);
+        this.range = range;
+        this.name = "ProcessorError";
+    }
+}
 
 export type ProcessorResult<T> = {
     output: T;

@@ -91,12 +91,31 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
         }
     };
 
+    const number = () => {
+        while (char = iteration.next()) {
+            head.index++;
+
+            if (!digits.includes(char)) {
+                output.push({
+                    kind: "value",
+                    type: "number",
+                    value: parseInt(input.substring(foot.index, head.index)),
+                    range: Range.from(foot, head)
+                });
+
+                return;
+            }
+        }
+    };
+
     const capture = () => {
         switch (char) {
             case "'": return string;
             case "#": return comment;
         }
 
+        if(digits.includes(char)) return number;
+        
         if (symbols.includes(char)) return () => {
             output.push({
                 kind: "symbol",

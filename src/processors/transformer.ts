@@ -21,10 +21,12 @@ export function transformer(tokens: Token[]) {
 
     let token: Token;
 
-    const group = (beginToken: Token): Compound<"group"> | undefined => {
+    const group = (beginToken: Token): Compound<"group"> => {
         const nodes: Node[] = [];
+        let last;
 
         while (token = iteration.next()) {
+            last = token;
             nodes.push(transform(token));
 
             if (token.kind === "symbol" && token.value === ")") {
@@ -36,10 +38,10 @@ export function transformer(tokens: Token[]) {
             }
         }
 
-        //unclosed group error 
+        throw new ProcessorError("Unclosed group", Range.from(beginToken.range.begin, last.range.end));
     };
 
-    const array = (beginToken: Token): Compound<"array"> | undefined => {
+    const array = (beginToken: Token): Compound<"array"> => {
         const nodes: Node[] = [];
         let expectedComa = false;
 
@@ -55,30 +57,28 @@ export function transformer(tokens: Token[]) {
 
                 if (expectedComa) {
                     if (token.value !== ",") {
-                        //error expected coma
-                        continue;
+                        throw new ProcessorError("Expected coma", token.range);
                     }
 
                     expectedComa = false;
                     continue;
                 }
 
-                //error expected value
-                continue;
+                throw new ProcessorError("Expected value", token.range);
             }
 
             expectedComa = true;
             nodes.push(transform(token));
         }
 
-        //unclosed array error
+        throw new ProcessorError("Unclosed array", beginToken.range);
     };
 
     const transform = (token: Token): Node  => {
         if (token.kind === "symbol") {
             switch (token.value) {
-                case "(": return group(token)!; //temporarily ignore nullability until error handling is completed
-                case "[": return array(token)!;
+                case "(": return group(token); //temporarily ignore nullability until error handling is completed
+                case "[": return array(token);
             }
         }
 

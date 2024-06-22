@@ -1,7 +1,5 @@
 export class Iteration<T> {
     private iterator: Iterator<T>;
-    public last: T | undefined;
-    public done: boolean = false;
 
     constructor(iterable: Iterable<T>) {
         this.iterator = iterable[Symbol.iterator]();

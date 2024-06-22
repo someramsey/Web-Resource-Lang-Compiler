@@ -43,9 +43,13 @@ export function transformer(tokens: Token[]) {
 
     const array = (beginToken: Token): Compound<"array"> => {
         const nodes: Node[] = [];
+
+        let last;
         let expectedComa = false;
 
         while (token = iteration.next()) {
+            last = token;
+
             if (token.kind === "symbol") {
                 if (token.value === "]") {
                     return {
@@ -71,14 +75,35 @@ export function transformer(tokens: Token[]) {
             nodes.push(transform(token));
         }
 
-        throw new ProcessorError("Unclosed array", beginToken.range);
+        throw new ProcessorError("Unclosed array", Range.from(beginToken.range.begin, last.range.end));
     };
 
-    const transform = (token: Token): Node  => {
+    const block = (beginToken: Token): Compound<"block"> => {
+        const nodes: Node[] = [];
+        let last;
+
+        while (token = iteration.next()) {
+            last = token;
+            nodes.push(transform(token));
+
+            if (token.kind === "symbol" && token.value === ")") {
+                return {
+                    kind: "block",
+                    children: nodes,
+                    range: Range.from(beginToken.range.begin, token.range.end)
+                };
+            }
+        }
+
+        throw new ProcessorError("Unclosed block", Range.from(beginToken.range.begin, last.range.end));
+    };
+
+    const transform = (token: Token): Node => {
         if (token.kind === "symbol") {
             switch (token.value) {
-                case "(": return group(token); //temporarily ignore nullability until error handling is completed
+                case "(": return group(token);
                 case "[": return array(token);
+                case "{": return block(token);
             }
         }
 

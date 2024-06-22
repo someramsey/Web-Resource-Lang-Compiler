@@ -1,10 +1,11 @@
+import { ProcessorError, ProcessorResult } from "../processor";
 import { Iteration } from "../iteration";
 import { Position } from "../position";
 import { Range } from "../range";
 
 const breaks = [" ", "\t", "\n", "\r"];
 const symbols = ["(", ")", "{", "}", "[", "]", ",", ";", ":", "."];
-
+const digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
 type BaseToken = {
     range: Range;
@@ -23,9 +24,11 @@ type StandartToken = {
 
 export type Token = StandartToken | ValueToken<"string", string> | ValueToken<"number", number>;
 
-export function tokenizer(input: string): Token[] {
-    const result: Token[] = [];
+export function tokenizer(input: string): ProcessorResult<Token[]> {
     const iteration = new Iteration(input);
+
+    const output: Token[] = [];
+    const errors: ProcessorError[] = []
 
     let head: Position = { column: 0, line: 0, index: 0 };
     let foot: Position = { column: 0, line: 0, index: 0 };
@@ -43,9 +46,10 @@ export function tokenizer(input: string): Token[] {
                 head.line++;
                 head.column = 0;
 
-                //error unterminated string literal
-
-                return;
+                errors.push({
+                    message: "Unterminated string literal",
+                    range: Range.from(foot, head)
+                });
             }
 
             if (!escaped) {
@@ -53,7 +57,7 @@ export function tokenizer(input: string): Token[] {
                     escaped = true;
                 }
                 else if (char == "'") {
-                    result.push({
+                    output.push({
                         kind: "value",
                         type: "string",
                         value: input.substring(foot.index, head.index),
@@ -68,8 +72,10 @@ export function tokenizer(input: string): Token[] {
             }
         }
 
-
-        //error unterminated string literal at eof
+        errors.push({
+            message: "Unterminated string literal",
+            range: Range.from(foot, head)
+        });
     };
 
     const comment = () => {
@@ -83,7 +89,7 @@ export function tokenizer(input: string): Token[] {
                 break;
             }
         }
-    }
+    };
 
     const capture = () => {
         switch (char) {
@@ -92,7 +98,7 @@ export function tokenizer(input: string): Token[] {
         }
 
         if (symbols.includes(char)) return () => {
-            result.push({
+            output.push({
                 kind: "symbol",
                 value: char,
                 range: Range.from(foot, head)
@@ -102,7 +108,7 @@ export function tokenizer(input: string): Token[] {
 
     const pushUncaptured = () => {
         if (!captured) {
-            result.push({
+            output.push({
                 kind: "none",
                 value: input.substring(head.index, foot.index),
                 range: Range.from(foot, head)
@@ -142,5 +148,5 @@ export function tokenizer(input: string): Token[] {
         captured = false;
     }
 
-    return result;
+    return { output, errors };
 }

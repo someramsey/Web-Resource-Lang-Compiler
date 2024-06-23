@@ -92,7 +92,7 @@ export function transformer(tokens: Token[]) {
             const node = transform(token);
 
             if (!isValueNode(node)) {
-                throw new ProcessorError("Unexpected token", node.range);
+                throw new ProcessorError("Unexpected token expected a value", node.range);
             }
 
             coma = true;

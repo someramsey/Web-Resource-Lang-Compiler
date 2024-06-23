@@ -2,11 +2,13 @@ import { Iteration } from "../iteration";
 import { ProcessorError, ProcessorResult } from "../processor";
 import { Node } from "./transformer";
 
-type Instruction = {
-
-
-
+type AssignmentInstruction = {
+    kind: "assignment";
+    id: string;
+    value: Node;
 }
+
+type Instruction = AssignmentInstruction;
 
 function identifier(iteration: Iteration<Node>) {
     const node = iteration.next();
@@ -71,9 +73,13 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
     const assignment = () => {
         const id = identifier(iteration);
         symbol(iteration, ":");
-        expect(iteration.next(), [array, block]);
+        const value = expect(iteration.next(), [array, block]);
+        symbol(iteration, ";");
 
+        output.push({ kind: "assignment", id, value });
     };
+
+
 
     const instruction = () => {
         if (node.kind !== "none") {
@@ -83,6 +89,8 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
         switch (node.value) {
             case "let": return assignment();
         }
+
+        throw new ProcessorError("Unknown instruction", node.range);
     }
 
     while (node = iteration.next()) {
@@ -93,19 +101,5 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
         }
     }
 
-    return {
-        output,
-        errors
-    }
+    return { errors, output }
 }
-
-//Unholy type matching:
-// type MatchResult<T> = { match: boolean; result?: T; };
-
-// function predicate<V, T extends ((node: Node) => MatchResult<V>)[], TReturn extends ReturnType<T[number]>["result"]>(matchers: T): TReturn {
-//     return matchers[0]({
-//         kind: "none", range: { begin: { column: 0, line: 0, index: 0 }, end: { column: 0, line: 0, index: 0 } }, value: ""
-//     }).match as TReturn;
-// }
-
-// const a = predicate([array])

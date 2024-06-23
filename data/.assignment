@@ -1,3 +1,2 @@
-let a: { a: "a", b: 10, c: "dw"};
-let b: a["b"];
-let c: [10, 20, "c"];
+let a: { a: 'a', b: 10, c: 'dw'};
+let c: [10, 20, 'c'];

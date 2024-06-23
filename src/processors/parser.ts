@@ -59,7 +59,7 @@ function expect<T>(node: Node, predicates: ((node: Node) => MatchResult<T>)[]): 
         expectations.push(matchResult.expected)
     }
 
-    throw new ProcessorError(`Expected ${expectations.join(", ")}`, node.range);
+    throw new ProcessorError(`Expected ${expectations.join(", ")} found ${node.kind}`, node.range);
 }
 
 export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
@@ -101,5 +101,5 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
         }
     }
 
-    return { errors, output }
+    return { output, errors }
 }

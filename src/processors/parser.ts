@@ -26,28 +26,38 @@ function symbol(iteration: Iteration<Node>, value: string) {
     }
 }
 
-function array(node: Node) {
-    if(node.kind === "array") {
-        return node;
+function array(node: Node): MatchResult<Node> {
+    if (node.kind === "array") {
+        return { match: true, result: node };
     }
 
-    return null;
+    return { match: false, expected: "array" };
 }
 
-type Matcher<T> = (node: Node) => T | null;
-
-function predicate<T extends object>(iteration: Iteration<Node>, matchers: Matcher<T>[]): T {
-    const node = iteration.next();
-
-    for (const matcher of matchers) {
-        const result = matcher(node);
-
-        if (result !== null) {
-            return result;
-        }
+function block(node: Node): MatchResult<Node> {
+    if (node.kind === "block") {
+        return { match: true, result: node };
     }
 
-    throw new Error(); 
+    return { match: false, expected: "block" };
+}
+
+type MatchResult<T> = { match: true, result: T } | { match: false, expected: string };
+
+function expect<T>(node: Node, predicates: ((node: Node) => MatchResult<T>)[]): T {
+    const expectations: string[] = [];
+
+    for (const predicate of predicates) {
+        const matchResult = predicate(node);
+
+        if (matchResult.match) {
+            return matchResult.result;
+        }
+
+        expectations.push(matchResult.expected)
+    }
+
+    throw new ProcessorError(`Expected ${expectations.join(", ")}`, node.range);
 }
 
 export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
@@ -61,7 +71,8 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
     const assignment = () => {
         const id = identifier(iteration);
         symbol(iteration, ":");
-        predicate(iteration, [array]).kind === "array";
+        expect(iteration.next(), [array, block]);
+
     };
 
     const instruction = () => {

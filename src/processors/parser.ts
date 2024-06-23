@@ -1,6 +1,6 @@
 import { Iteration } from "../iteration";
 import { ProcessorError, ProcessorResult } from "../processor";
-import { Node } from "./transformer";
+import { Node, isValueNode } from "./transformer";
 
 type AssignmentInstruction = {
     kind: "assignment";
@@ -28,22 +28,6 @@ function symbol(iteration: Iteration<Node>, value: string) {
     }
 }
 
-function array(node: Node): MatchResult<Node> {
-    if (node.kind === "array") {
-        return { match: true, result: node };
-    }
-
-    return { match: false, expected: "array" };
-}
-
-function block(node: Node): MatchResult<Node> {
-    if (node.kind === "block") {
-        return { match: true, result: node };
-    }
-
-    return { match: false, expected: "block" };
-}
-
 type MatchResult<T> = { match: true, result: T } | { match: false, expected: string };
 
 function expect<T>(node: Node, predicates: ((node: Node) => MatchResult<T>)[]): T {
@@ -62,6 +46,7 @@ function expect<T>(node: Node, predicates: ((node: Node) => MatchResult<T>)[]): 
     throw new ProcessorError(`Expected ${expectations.join(", ")} found ${node.kind}`, node.range);
 }
 
+//TODO: check for eof on every match
 export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
     const iteration = new Iteration(nodes);
 
@@ -70,13 +55,33 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
 
     let node: Node;
 
+    const evaluate = () => {
+
+        if (isValueNode(iteration.next())) {
+            //push value
+        } else if (node.kind === "none") {
+            //push reference
+
+            
+            
+            
+            //accessor
+            node = iteration.next();
+
+            if (node.kind === "array") {
+                if(node.items.length > 1) {
+                    errors.push(new ProcessorError("Unexpected token, array accessors must have one item", node.range));
+                }
+
+                //push array accessor
+            }
+        }
+    };
     const assignment = () => {
         const id = identifier(iteration);
         symbol(iteration, ":");
-        const value = expect(iteration.next(), [array, block]);
+        evaluate();
         symbol(iteration, ";");
-
-        output.push({ kind: "assignment", id, value });
     };
 
 

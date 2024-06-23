@@ -26,6 +26,8 @@ export type Compound = ArrayCompound | GroupCompound | BlockCompound;
 
 export type Node = Token | Compound;
 
+export const isValueNode = (node: Node) => node.kind === "value" || node.kind === "array" || node.kind === "block";
+
 export function transformer(tokens: Token[]) {
     const iteration = new Iteration(tokens);
 
@@ -33,8 +35,6 @@ export function transformer(tokens: Token[]) {
     const errors: ProcessorError[] = [];
 
     let token: Token;
-
-    const isValueNode = (node: Node) => node.kind === "value" || node.kind === "array" || node.kind === "block";
 
     const group = (beginToken: Token): GroupCompound => {
         const nodes: Node[] = [];
@@ -84,14 +84,12 @@ export function transformer(tokens: Token[]) {
                     continue;
                 }
 
-
-                throw new ProcessorError("Expected value", token.range);
+                throw new ProcessorError("Expected value or reference", token.range);
             }
-
 
             const node = transform(token);
 
-            if (!isValueNode(node)) {
+            if (!isValueNode(node) && node.kind !== "none") {
                 throw new ProcessorError("Unexpected token expected a value", node.range);
             }
 
@@ -112,7 +110,7 @@ export function transformer(tokens: Token[]) {
         let value: Node[];
 
         const completeProperty = () => {
-            properties.push({ key, value });   
+            properties.push({ key, value });
         }
 
         while (token = iteration.next()) {

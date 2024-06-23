@@ -109,7 +109,7 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
     const capture = (char) => {
         switch (char) {
             case "#": return comment;
-            case "\"": case "'": return string;
+            case "'": return string;
         }
 
         if (digits.includes(char)) return number;

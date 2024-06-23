@@ -1,14 +1,12 @@
-let weights: {'thin': 200, 'regular': 400, 'bold': 500};
+let weights: {thin: 200, regular: 400, bold: 500};
 let italicModifiers: ['italic', 'i'];
 
 font montserrat-(weight: keyof weights)-(italic: (in italicModifiers)?) {
-    family: 'Montserrat', sans-serif;
     weight: weights[weight];
     style: italic
 } from 'url';
 
 font from 'url' other-(style: in ['italic', 'normal']) {
-    family: 'Other', sans-serif;
     weight: 400;
     style: normal;
 }

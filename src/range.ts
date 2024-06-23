@@ -1,4 +1,5 @@
 import { Position } from "./position";
+import { Token } from "./processors/tokenizer";
 
 export class Range {
     public begin: Position;
@@ -11,5 +12,9 @@ export class Range {
 
     static from(begin: Position, end: Position) {
         return new Range({ ...begin }, { ...end });
+    }
+
+    static between(begin: Token, end: Token) {
+        return new Range(begin.range.begin, end.range.end);
     }
 }

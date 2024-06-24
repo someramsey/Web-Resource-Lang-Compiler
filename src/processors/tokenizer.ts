@@ -6,6 +6,7 @@ import { Range } from "../range";
 const breaks = [" ", "\t", "\n", "\r"];
 const symbols = ["(", ")", "{", "}", "[", "]", ",", ";", ":", "."];
 const digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+const stringIndicators = ["'", '"'];
 
 type BaseToken = {
     range: Range;
@@ -32,6 +33,7 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
     let foot: Position = { column: 0, line: 0, index: 0 };
 
     let captured: boolean = false;
+    let stringTerminator = "'";
 
     const string = () => {
         let escaped = false;
@@ -53,7 +55,7 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
                 if (char === "\\") {
                     escaped = true;
                 }
-                else if (char == "'") {
+                else if (char == stringTerminator) {
                     output.push({
                         kind: "value",
                         type: "string",
@@ -109,11 +111,15 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
     const capture = (char) => {
         switch (char) {
             case "#": return comment;
-            case "'": return string;
         }
 
         if (digits.includes(char)) return number;
 
+        if (stringIndicators.includes(char)) {
+            stringTerminator = char;
+            return string;
+        } 
+        
         if (symbols.includes(char)) return () => {
             output.push({
                 kind: "symbol",

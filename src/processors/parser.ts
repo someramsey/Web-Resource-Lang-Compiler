@@ -1,32 +1,7 @@
+import { Instruction } from "../instructions/instruction";
 import { Iteration } from "../iteration";
 import { ProcessorError, ProcessorResult } from "../processor";
 import { Node, isValueNode } from "./transformer";
-
-type AssignmentInstruction = {
-    kind: "assignment";
-    id: string;
-    value: Node;
-}
-
-type Instruction = AssignmentInstruction;
-
-function identifier(iteration: Iteration<Node>) {
-    const node = iteration.next();
-
-    if (node.kind !== "none") {
-        throw new ProcessorError("Expected identifier", node.range);
-    }
-
-    return node.value;
-}
-
-function symbol(iteration: Iteration<Node>, value: string) {
-    const node = iteration.next();
-
-    if (node.kind !== "symbol" || node.value !== value) {
-        throw new ProcessorError(`Expected '${value}'`, node.range);
-    }
-}
 
 type MatchResult<T> = { match: true, result: T } | { match: false, expected: string };
 
@@ -44,6 +19,24 @@ function expect<T>(node: Node, predicates: ((node: Node) => MatchResult<T>)[]): 
     }
 
     throw new ProcessorError(`Expected ${expectations.join(", ")} found ${node.kind}`, node.range);
+}
+
+function identifier(iteration: Iteration<Node>) {
+    const node = iteration.next();
+
+    if (node.kind !== "none") {
+        throw new ProcessorError("Expected identifier", node.range);
+    }
+
+    return node.value;
+}
+
+function symbol(iteration: Iteration<Node>, value: string) {
+    const node = iteration.next();
+
+    if (node.kind !== "symbol" || node.value !== value) {
+        throw new ProcessorError(`Expected '${value}'`, node.range);
+    }
 }
 
 //TODO: check for eof on every match

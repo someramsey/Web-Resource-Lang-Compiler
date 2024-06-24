@@ -1,26 +1,8 @@
 import { Instruction } from "../instructions/instruction";
-import { LiteralExpressionFragment, ReferenceExpressionFragment} from "../instructions/assignment";
+import { Expression, ExpressionFragment, LiteralExpressionFragment, ReferenceExpressionFragment } from "../instructions/assignment";
 import { Iteration } from "../iteration";
 import { ProcessorError, ProcessorResult } from "../processor";
 import { Node } from "./transformer";
-
-type MatchResult<T> = { match: true, result: T } | { match: false, expected: string };
-
-function expect<T>(node: Node, predicates: ((node: Node) => MatchResult<T>)[]): T {
-    const expectations: string[] = [];
-
-    for (const predicate of predicates) {
-        const matchResult = predicate(node);
-
-        if (matchResult.match) {
-            return matchResult.result;
-        }
-
-        expectations.push(matchResult.expected)
-    }
-
-    throw new ProcessorError(`Expected ${expectations.join(", ")} found ${node.kind}`, node.range);
-}
 
 function identifier(iteration: Iteration<Node>) {
     const node = iteration.next();
@@ -32,9 +14,7 @@ function identifier(iteration: Iteration<Node>) {
     return node.value;
 }
 
-function symbol(iteration: Iteration<Node>, value: string) {
-    const node = iteration.next();
-
+function symbol(node: Node, value: string) {
     if (node.kind !== "symbol" || node.value !== value) {
         throw new ProcessorError(`Expected '${value}'`, node.range);
     }
@@ -46,8 +26,6 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
 
     const output: Instruction[] = [];
     const errors: ProcessorError[] = [];
-
-    let node: Node;
 
     const evaluateValueFragment = (node: Node): LiteralExpressionFragment | ReferenceExpressionFragment => {
         if (node.kind === "none") {
@@ -66,68 +44,64 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
         throw new ProcessorError("Failed to evaluate: Unexpected token", node.range);
     }
 
-    const evaluate = (iteration: Iteration<Node>) => {
-        const expressionItem = evaluateValueFragment(iteration.next());
+    const evaluate = (iteration: Iteration<Node>): Expression => {
+        const expression: Expression = [
+            evaluateValueFragment(iteration.next())
+        ];
 
+        const node = iteration.next();
 
-        node = iteration.next();
+        if (node.kind === "value" && node.meta == "array") {
+            if (node.value.length > 1) {
+                throw new ProcessorError("Unexpected token, array accessors must have one item", node.range);
+            }
 
-        
-        
-        // if (isValueNode(iteration.next())) {
-        //     expression.push({
-        //         kind: "value",
-        //         type: "string",
-        //         value: "value"
-        //     });
-        // } else if (node.kind === "none") {
-        //     expression.push({
-        //         kind: "reference",
-        //         target: node.value
-        //     });
+            expression.push({
+                kind: "accessor",
+                query: evaluateValueFragment(node.value[0])
+            });
 
-        //     //accessor
-        //     node = iteration.next();
+            iteration.next();
+        }
 
-        //     if (node.kind === "array") {
-        //         if (node.items.length > 1) {
-        //             errors.push(new ProcessorError("Unexpected token, array accessors must have one item", node.range));
-        //         }
-
-
-        //         //push array accessor
-        //         expression.push({
-        //             kind: "accessor",
-        //             query: {
-        //                 kind: "value",
-        //                 type: "number",
-        //                 value: evaluate()
-        //             }
-        //         });
-        //     }
-        // }
+        return expression;
     };
 
     const assignment = () => {
         const id = identifier(iteration);
-        symbol(iteration, ":");
-        evaluate(iteration);
-        symbol(iteration, ";");
+        symbol(iteration.next(), ":");
+        const expression = evaluate(iteration);
+        symbol(iteration.current, ";");
+
+        output.push({ kind: "assignment", id, expression });
+    };
+
+    const font = () => {
+        while (iteration.next()) {
+            //read name
+
+            if(iteration.current.kind == "value" && iteration.current.meta == "block") {
+                //start parsing the contents of the set
+            }
+        }
+
+        errors.push(new ProcessorError("Unfinished statement at eof", iteration.current.range));
     };
 
     const instruction = () => {
-        if (node.kind !== "none") {
-            throw new ProcessorError("Unexpected token", node.range);
+        if (iteration.current.kind !== "none") {
+            throw new ProcessorError("Unexpected token, expected instruction", iteration.current.range);
         }
 
-        switch (node.value) {
+        switch (iteration.current.value) {
             case "let": return assignment();
+            case "font": return font();
         }
 
-        throw new ProcessorError("Unknown instruction", node.range);
+        throw new ProcessorError("Unknown instruction", iteration.current.range);
     }
 
-    while (node = iteration.next()) {
+    while (iteration.next()) {
         try {
             instruction();
         } catch (error) {

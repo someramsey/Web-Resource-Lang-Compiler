@@ -21,8 +21,10 @@ export type AccessorExpressionFragment = {
 
 export type ExpressionFragment = LiteralExpressionFragment | ReferenceExpressionFragment | AccessorExpressionFragment;
 
+export type Expression = ExpressionFragment[];
+
 export type AssignmentInstruction = {
     kind: "assignment";
     id: string;
-    expression: ExpressionFragment[];
+    expression: Expression;
 };

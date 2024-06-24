@@ -1,6 +1,6 @@
 import { Iteration } from "../iteration";
 import { ProcessorError } from "../processor";
-import { Range, Ranged } from "../range";
+import { Range } from "../range";
 import { Token, ValueToken } from "./tokenizer";
 
 export type Property = { key: string; value: Node[]; }

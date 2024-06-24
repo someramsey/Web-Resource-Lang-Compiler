@@ -9,17 +9,17 @@ const stringIndicators = ["'", '"'];
 
 type BaseToken<Kind extends string> = { kind: Kind; } & Ranged;
 
-export type Token = BasicToken | ValueToken;
-export type PrimeMetaType = MetaType<"string", string> | MetaType<"number", number>;
-
 export type BasicToken = {
     value: string;
 } & BaseToken<"symbol" | "none">;
 
-export type ValueToken<T extends PrimeMetaType = PrimeMetaType> = {
+export type ValueToken<T extends MetaType<string, any>> = {
     meta: T["meta"];
     value: T["value"];
 } & BaseToken<"value">;
+
+export type PrimeMetaType = MetaType<"string", string> | MetaType<"number", number>;
+export type Token = BasicToken | ValueToken<PrimeMetaType>;
 
 export function tokenizer(input: string): ProcessorResult<Token[]> {
     const output: Token[] = [];

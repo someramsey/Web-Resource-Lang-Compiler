@@ -1,9 +1,12 @@
 import { ValueToken } from "../processors/tokenizer";
 
+
 type LiteralExpression = {
     kind: "literal";
-    type: ValueToken["type"];
-    value: ValueToken["value"];
+
+
+    
+    
 };
 
 type ReferenceExpression = {

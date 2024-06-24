@@ -1,32 +1,17 @@
 import { Iteration } from "../iteration";
 import { ProcessorError } from "../processor";
-import { Range } from "../range";
-import { Token } from "./tokenizer";
-
-type BaseCompound = { range: Range; };
-
-type GroupCompound = {
-    kind: "group";
-    children: Node[];
-} & BaseCompound;
-
-type ArrayCompound = {
-    kind: "array";
-    items: Node[];
-} & BaseCompound;
+import { Range, Ranged } from "../range";
+import { Token, ValueToken } from "./tokenizer";
 
 type Property = { key: string; value: Node[]; }
 
-type BlockCompound = {
-    kind: "block";
-    properties: Property[];
-} & BaseCompound;
+type BlockMetaType = MetaType<"block", Property[]>;
+type ArrayMetaType = MetaType<"array", Node[]>;
+type GroupMetaType = MetaType<"group", Node[]>;
 
-export type Compound = ArrayCompound | GroupCompound | BlockCompound;
+type CompoundMetaType = BlockMetaType | ArrayMetaType | GroupMetaType;
 
-export type Node = Token | Compound;
-
-export const isValueNode = (node: Node) => node.kind === "value" || node.kind === "array" || node.kind === "block";
+export type Node = Token | ValueToken<CompoundMetaType>
 
 export function transformer(tokens: Token[]) {
     const iteration = new Iteration(tokens);
@@ -36,7 +21,7 @@ export function transformer(tokens: Token[]) {
 
     let token: Token;
 
-    const group = (beginToken: Token): GroupCompound => {
+    const group = (beginToken: Token): ValueToken<CompoundMetaType> => {
         const nodes: Node[] = [];
         let last;
 
@@ -46,9 +31,10 @@ export function transformer(tokens: Token[]) {
 
             if (token.kind === "symbol" && token.value === ")") {
                 return {
-                    kind: "group",
-                    children: nodes,
-                    range: Range.from(beginToken.range.begin, token.range.end)
+                    kind: "value",
+                    meta: "group",
+                    value: nodes,
+                    range: Range.between(beginToken, token)
                 };
             }
         }
@@ -56,7 +42,7 @@ export function transformer(tokens: Token[]) {
         throw new ProcessorError("Unclosed group", Range.from(beginToken.range.begin, last.range.end));
     };
 
-    const array = (beginToken: Token): ArrayCompound => {
+    const array = (beginToken: Token): ValueToken<ArrayMetaType> => {
         const items: Node[] = [];
 
         //TODO: Keep safely throwing until end of array to parse more info
@@ -70,8 +56,10 @@ export function transformer(tokens: Token[]) {
             if (token.kind === "symbol") {
                 if (token.value === "]") {
                     return {
-                        kind: "array", items,
+                        kind: "value",
+                        meta: "array",
                         range: Range.between(beginToken, token),
+                        value: items
                     };
                 }
 
@@ -87,20 +75,14 @@ export function transformer(tokens: Token[]) {
                 throw new ProcessorError("Expected value or reference", token.range);
             }
 
-            const node = transform(token);
-
-            if (!isValueNode(node) && node.kind !== "none") {
-                throw new ProcessorError("Unexpected token expected a value", node.range);
-            }
-
             coma = true;
-            items.push(node);
+            items.push(transform(token));
         }
 
         throw new ProcessorError("Unclosed array", Range.from(beginToken.range.begin, last.range.end));
     };
 
-    const block = (beginToken: Token): BlockCompound => {
+    const block = (beginToken: Token): ValueToken<BlockMetaType> => {
         const properties: Property[] = [];
 
         let last;
@@ -122,8 +104,9 @@ export function transformer(tokens: Token[]) {
                 }
 
                 return {
-                    kind: "block",
-                    properties,
+                    kind: "value",
+                    meta: "block",
+                    value: properties,
                     range: Range.from(beginToken.range.begin, token.range.end)
                 };
             }

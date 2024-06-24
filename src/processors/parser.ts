@@ -1,7 +1,8 @@
+import { Expression, LiteralExpressionFragment, ReferenceExpressionFragment } from "../instructions/expression";
 import { Instruction } from "../instructions/instruction";
-import { Expression, ExpressionFragment, LiteralExpressionFragment, ReferenceExpressionFragment } from "../instructions/assignment";
 import { Iteration } from "../iteration";
 import { ProcessorError, ProcessorResult } from "../processor";
+import { Token } from "./tokenizer";
 import { Node } from "./transformer";
 
 function identifier(iteration: Iteration<Node>) {
@@ -44,21 +45,30 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
         throw new ProcessorError("Failed to evaluate: Unexpected token", node.range);
     }
 
+    //TODO: add keyof, valueof and in modifiers
     const evaluate = (iteration: Iteration<Node>): Expression => {
-        const expression: Expression = [
-            evaluateValueFragment(iteration.next())
-        ];
+        const expression: Expression = [];
 
-        const node = iteration.next();
+        iteration.next();
 
-        if (node.kind === "value" && node.meta == "array") {
-            if (node.value.length > 1) {
-                throw new ProcessorError("Unexpected token, array accessors must have one item", node.range);
+        //check for modifiers
+        if (iteration.current.kind == "none") {
+            //add the modiiers to the expression
+        }
+
+
+        expression.push(evaluateValueFragment(iteration.current));
+
+        iteration.next();
+
+        if (iteration.current.kind === "value" && iteration.current.meta == "array") {
+            if (iteration.current.value.length > 1) {
+                throw new ProcessorError("Unexpected token, array accessors must have one item", iteration.current.range);
             }
 
             expression.push({
                 kind: "accessor",
-                query: evaluateValueFragment(node.value[0])
+                query: evaluateValueFragment(iteration.current.value[0])
             });
 
             iteration.next();
@@ -77,11 +87,20 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
     };
 
     const font = () => {
+        let name: Token[] = [];
+
         while (iteration.next()) {
             //read name
+            if (iteration.current.kind == "none") {
+                name.push(iteration.current);
+            } else if (iteration.current.kind == "symbol" && iteration.current.value == "(") {
+                const paramId = identifier(iteration);
+                symbol(iteration.next(), ":");
+                const expression = evaluate(iteration);
 
-            if(iteration.current.kind == "value" && iteration.current.meta == "block") {
-                //start parsing the contents of the set
+                //add name parameter
+            } else if (iteration.current.kind == "value" && iteration.current.meta == "block") {
+                //parse the contents of the set
             }
         }
 

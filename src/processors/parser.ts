@@ -1,5 +1,5 @@
 import { Instruction } from "../instructions/instruction";
-import { ExpressionFragment, ValueExpression } from "../instructions/AssignmentInstruction";
+import { LiteralExpressionFragment, ReferenceExpressionFragment} from "../instructions/assignment";
 import { Iteration } from "../iteration";
 import { ProcessorError, ProcessorResult } from "../processor";
 import { Node } from "./transformer";
@@ -49,11 +49,17 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
 
     let node: Node;
 
-    const evaluateValueFragment = (node: Node): ValueExpression => {
+    const evaluateValueFragment = (node: Node): LiteralExpressionFragment | ReferenceExpressionFragment => {
         if (node.kind === "none") {
             return {
                 kind: "reference",
                 target: node.value
+            };
+        } else if (node.kind === "value") {
+            return {
+                kind: "literal",
+                meta: node.meta,
+                value: node.value
             };
         }
 
@@ -61,12 +67,13 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
     }
 
     const evaluate = (iteration: Iteration<Node>) => {
-        let expression: ExpressionFragment[] = [];
+        const expressionItem = evaluateValueFragment(iteration.next());
 
-        while (node = iteration.next()) {
-            
-        }
 
+        node = iteration.next();
+
+        
+        
         // if (isValueNode(iteration.next())) {
         //     expression.push({
         //         kind: "value",

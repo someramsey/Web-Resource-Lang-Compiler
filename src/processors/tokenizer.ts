@@ -9,11 +9,9 @@ const stringIndicators = ["'", '"'];
 
 type BaseToken<Kind extends string> = { kind: Kind; } & Ranged;
 
-export type BasicToken = {
-    value: string;
-} & BaseToken<"symbol" | "none">;
+export type BasicToken = { value: string; } & BaseToken<"symbol" | "none">;
 
-export type ValueToken<T extends MetaType<string, any>> = {
+export type ValueToken<T extends MetaType<string, unknown>> = {
     meta: T["meta"];
     value: T["value"];
 } & BaseToken<"value">;

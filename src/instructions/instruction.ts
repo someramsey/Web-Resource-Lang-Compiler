@@ -1,3 +1,3 @@
-import { AssignmentInstruction } from "./AssignmentInstruction";
+import { AssignmentInstruction } from "./assignment";
 
 export type Instruction = AssignmentInstruction;

@@ -3,13 +3,13 @@ import { ProcessorError } from "../processor";
 import { Range, Ranged } from "../range";
 import { Token, ValueToken } from "./tokenizer";
 
-type Property = { key: string; value: Node[]; }
+export type Property = { key: string; value: Node[]; }
 
-type BlockMetaType = MetaType<"block", Property[]>;
-type ArrayMetaType = MetaType<"array", Node[]>;
-type GroupMetaType = MetaType<"group", Node[]>;
+export type BlockMetaType = MetaType<"block", Property[]>;
+export type ArrayMetaType = MetaType<"array", Node[]>;
+export type GroupMetaType = MetaType<"group", Node[]>;
 
-type CompoundMetaType = BlockMetaType | ArrayMetaType | GroupMetaType;
+export type CompoundMetaType = BlockMetaType | ArrayMetaType | GroupMetaType;
 
 export type Node = Token | ValueToken<CompoundMetaType>
 

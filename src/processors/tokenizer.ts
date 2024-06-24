@@ -1,6 +1,5 @@
-import { ProcessorError, ProcessorResult } from "../processor";
-import { Iteration } from "../iteration";
 import { Position } from "../position";
+import { ProcessorError, ProcessorResult } from "../processor";
 import { Range } from "../range";
 
 const breaks = [" ", "\t", "\n", "\r"];
@@ -12,7 +11,7 @@ type BaseToken = {
     range: Range;
 }
 
-type ValueToken<Type, Value> = {
+type BaseValueToken<Type, Value> = {
     kind: "value";
     type: Type;
     value: Value;
@@ -23,7 +22,9 @@ type StandartToken = {
     value: string;
 } & BaseToken;
 
-export type Token = StandartToken | ValueToken<"string", string> | ValueToken<"number", number>;
+export type ValueToken = BaseValueToken<"string", string> | BaseValueToken<"number", number>;
+
+export type Token = StandartToken | ValueToken;
 
 export function tokenizer(input: string): ProcessorResult<Token[]> {
     const output: Token[] = [];

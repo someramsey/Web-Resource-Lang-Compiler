@@ -1,4 +1,5 @@
 import { Instruction } from "../instructions/instruction";
+import { ExpressionFragment } from "../instructions/AssignmentInstruction";
 import { Iteration } from "../iteration";
 import { ProcessorError, ProcessorResult } from "../processor";
 import { Node, isValueNode } from "./transformer";
@@ -48,36 +49,72 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
 
     let node: Node;
 
-    const evaluate = () => {
-
-        if (isValueNode(iteration.next())) {
-            //push value
-        } else if (node.kind === "none") {
-            //push reference
-
-            
-            
-            
-            //accessor
-            node = iteration.next();
-
-            if (node.kind === "array") {
-                if(node.items.length > 1) {
-                    errors.push(new ProcessorError("Unexpected token, array accessors must have one item", node.range));
-                }
-
-                //push array accessor
-            }
+    const evaluateFragment = (node: Node): ExpressionFragment => {
+        if (isValueNode(node)) {
+            // return {
+            //     kind: "value",
+            //     type: node.,
+            //     value: node.value
+            // };
         }
+
+        if (node.kind === "none") {
+            return {
+                kind: "reference",
+                target: node.value
+            };
+        }
+
+        throw new ProcessorError("Failed to evaluate: Unexpected token", node.range);
+    }
+
+    const evaluate = (iteration: Iteration<Node>) => {
+        let expression: ExpressionFragment[] = [];
+
+        while (node = iteration.next()) {
+            
+        }
+
+        // if (isValueNode(iteration.next())) {
+        //     expression.push({
+        //         kind: "value",
+        //         type: "string",
+        //         value: "value"
+        //     });
+        // } else if (node.kind === "none") {
+        //     expression.push({
+        //         kind: "reference",
+        //         target: node.value
+        //     });
+
+        //     //accessor
+        //     node = iteration.next();
+
+        //     if (node.kind === "array") {
+        //         if (node.items.length > 1) {
+        //             errors.push(new ProcessorError("Unexpected token, array accessors must have one item", node.range));
+        //         }
+
+
+        //         //push array accessor
+        //         expression.push({
+        //             kind: "accessor",
+        //             query: {
+        //                 kind: "value",
+        //                 type: "number",
+        //                 value: evaluate()
+        //             }
+        //         });
+        //     }
+        // }
     };
+
     const assignment = () => {
         const id = identifier(iteration);
         symbol(iteration, ":");
-        evaluate();
+        evaluate(iteration);
         symbol(iteration, ";");
     };
-
-
 
     const instruction = () => {
         if (node.kind !== "none") {

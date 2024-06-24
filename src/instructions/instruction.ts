@@ -1,10 +1,3 @@
-import { Node } from "../processors/transformer";
+import { AssignmentInstruction } from "./AssignmentInstruction";
 
-
-type Expression = {};
-type AssignmentInstruction = {
-    kind: "assignment";
-    id: string;
-    value: Node;
-};
 export type Instruction = AssignmentInstruction;

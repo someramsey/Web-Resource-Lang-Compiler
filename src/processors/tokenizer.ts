@@ -11,10 +11,7 @@ type BaseToken<Kind extends string> = { kind: Kind; } & Ranged;
 
 export type BasicToken = { value: string; } & BaseToken<"symbol" | "none">;
 
-export type ValueToken<T extends MetaType<string, unknown>> = {
-    meta: T["meta"];
-    value: T["value"];
-} & BaseToken<"value">;
+export type ValueToken<T extends MetaType<string, unknown>> = BaseToken<"value"> & T;
 
 export type PrimeMetaType = MetaType<"string", string> | MetaType<"number", number>;
 export type Token = BasicToken | ValueToken<PrimeMetaType>;

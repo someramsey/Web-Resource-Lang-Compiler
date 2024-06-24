@@ -1,6 +1,10 @@
 import { Position } from "./position";
 import { Token } from "./processors/tokenizer";
 
+export type Ranged = {
+    range: Range;
+};
+
 export class Range {
     public begin: Position;
     public end: Position;

@@ -1,5 +1,5 @@
 import { Instruction } from "../instructions/instruction";
-import { ExpressionFragment } from "../instructions/AssignmentInstruction";
+import { ExpressionFragment, ValueExpression } from "../instructions/AssignmentInstruction";
 import { Iteration } from "../iteration";
 import { ProcessorError, ProcessorResult } from "../processor";
 import { Node, isValueNode } from "./transformer";
@@ -49,8 +49,9 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
 
     let node: Node;
 
-    const evaluateFragment = (node: Node): ExpressionFragment => {
+    const evaluateValueFragment = (node: Node): ValueExpression => {
         if (isValueNode(node)) {
+            
             // return {
             //     kind: "value",
             //     type: node.,

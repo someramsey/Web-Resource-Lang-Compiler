@@ -1,7 +1,7 @@
 import { ValueToken } from "../processors/tokenizer";
 
-type ValueExpression = {
-    kind: "value";
+type LiteralExpression = {
+    kind: "literal";
     type: ValueToken["type"];
     value: ValueToken["value"];
 };
@@ -13,10 +13,11 @@ type ReferenceExpression = {
 
 type AccessorExpression = {
     kind: "accessor";
-    query: ValueExpression | ReferenceExpression;
+    query: ValueExpression;
 };
 
-export type ExpressionFragment = ValueExpression | ReferenceExpression | AccessorExpression;
+export type ValueExpression = LiteralExpression | ReferenceExpression;
+export type ExpressionFragment = ValueExpression | AccessorExpression;
 
 export type AssignmentInstruction = {
     kind: "assignment";

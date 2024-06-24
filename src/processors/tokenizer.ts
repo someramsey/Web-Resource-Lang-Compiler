@@ -1,30 +1,25 @@
 import { Position } from "../position";
 import { ProcessorError, ProcessorResult } from "../processor";
-import { Range } from "../range";
+import { Range, Ranged } from "../range";
 
 const breaks = [" ", "\t", "\n", "\r"];
 const symbols = ["(", ")", "{", "}", "[", "]", ",", ";", ":", "."];
 const digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 const stringIndicators = ["'", '"'];
 
-type BaseToken = {
-    range: Range;
-}
+type BaseToken<Kind extends string> = { kind: Kind; } & Ranged;
 
-type BaseValueToken<Type, Value> = {
-    kind: "value";
-    type: Type;
-    value: Value;
-} & BaseToken;
+export type Token = BasicToken | ValueToken;
+export type PrimeMetaType = MetaType<"string", string> | MetaType<"number", number>;
 
-type StandartToken = {
-    kind: "symbol" | "none";
+export type BasicToken = {
     value: string;
-} & BaseToken;
+} & BaseToken<"symbol" | "none">;
 
-export type ValueToken = BaseValueToken<"string", string> | BaseValueToken<"number", number>;
-
-export type Token = StandartToken | ValueToken;
+export type ValueToken<T extends PrimeMetaType = PrimeMetaType> = {
+    meta: T["meta"];
+    value: T["value"];
+} & BaseToken<"value">;
 
 export function tokenizer(input: string): ProcessorResult<Token[]> {
     const output: Token[] = [];
@@ -59,7 +54,7 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
                 else if (char == stringTerminator) {
                     output.push({
                         kind: "value",
-                        type: "string",
+                        meta: "string",
                         value: input.substring(foot.index, head.index - 1),
                         range: Range.from(foot, head)
                     });
@@ -97,7 +92,7 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
             if (!digits.includes(char)) {
                 output.push({
                     kind: "value",
-                    type: "number",
+                    meta: "number",
                     value: parseInt(input.substring(foot.index, head.index)),
                     range: Range.from(foot, head)
                 });
@@ -119,8 +114,8 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
         if (stringIndicators.includes(char)) {
             stringTerminator = char;
             return string;
-        } 
-        
+        }
+
         if (symbols.includes(char)) return () => {
             output.push({
                 kind: "symbol",

@@ -51,8 +51,7 @@ export function transformer(tokens: Token[]) {
         //TODO: Keep safely throwing until end of array to parse more info
 
         let last;
-        let ranged = false;
-        let seperator = false;
+        let state = "value";
 
         while (token = iteration.next()) {
             last = token;
@@ -65,60 +64,32 @@ export function transformer(tokens: Token[]) {
                         range: Range.between(beginToken, token),
                         value: items
                     };
-                }
-
-                if (seperator) {
-                    if (token.value === ",") {
-                        seperator = false;
-                        continue;
-                    } else if(token.value === ".." || token.value === "...") {
-                        ranged = true;
-                        continue;
+                } else if (token.value === ",") {
+                    if(state !== "seperator" && state !== "comma") {
+                        throw new ProcessorError("Expected value or reference", token.range);
                     }
+
+                    state = "value";
+                    continue;
+                } else if (token.value === ".." || token.value === "...") {
+                    if(state !== "seperator") {
+                        throw new ProcessorError("Expected value or reference", token.range);
+                    }
+
+                    state = "range-value";
+                    continue;
                 }
 
-                
-                
                 throw new ProcessorError("Expected value or reference", token.range);
-
-
-
-
-
-
-                // if (seperator === "seperator") {
-                //     if (token.value === "," || token.value === ".." || token.value === "...") {
-                //         seperator = "value";
-                //         continue;
-                //     }
-
-                //     throw new ProcessorError("Expected comma or range operator", token.range);
-                // }
-
-                // throw new ProcessorError("Expected value or reference", token.range);
             }
 
-            if (ranged) {
-                if (token.kind != "value") {
-                    throw new ProcessorError("Expected literal value: Range operator cannot be used with a reference", token.range);
-                } else if (token.meta != "number") {
-                    throw new ProcessorError("Expected number", token.range);
-                }
-
-                // if (ranged == "..") {
-
-                //     for (let i = 0; i < token.value; i++) {
-                //         items.push({ kind: "value", meta: "number", value: i, range: token.range });
-                //     }
-
-
-                // }
+            if(state === "value") {
+                state = "seperator";
+            } else if(state === "range-value") {
+                state = "comma";
             }
 
-
-            seperator = true;
-
-            const node = transform(token);
+            items.push(transform(token));
         }
 
         throw new ProcessorError("Unclosed array", Range.from(beginToken.range.begin, last.range.end));

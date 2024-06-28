@@ -1,24 +1,19 @@
 import { Iteration } from "../iteration";
-import { ProcessorError } from "../processor"; 
+import { ArrayMetaData, BlockMetaData, CompoundMetaData, GroupMetaData, PrimeMetaData, Property } from "../meta";
+import { ProcessorError } from "../processor";
 import { Range } from "../range";
-import { PrimeMetaValue, Token, ValueToken } from "./tokenizer";
+import { Token, ValueToken } from "./tokenizer";
 
-export type Property = { key: string; value: Node[]; }
+type CompoundNodeMetaData = CompoundMetaData<Node[]>;
 
-export type BlockMetaValue = MetaValue<"block", Property[]>;
-export type ArrayMetaValue = MetaValue<"array", Node[]>;
-export type GroupMetaValue = MetaValue<"group", Node[]>;
+export type NodeMetaData = PrimeMetaData | CompoundNodeMetaData;
+export type Node = Token | ValueToken<CompoundNodeMetaData>;
 
-export type CompoundMetaValue = BlockMetaValue | ArrayMetaValue | GroupMetaValue;
-export type NodeMetaValue = CompoundMetaValue | PrimeMetaValue;
-
-export type Node = Token | ValueToken<CompoundMetaValue>;
-
-export function isCompound(node: Node): node is ValueToken<CompoundMetaValue> {
+export function isCompound(node: Node): node is ValueToken<CompoundMetaData> {
     return node.kind === "value" && (
-        node.metaValue.meta === "block" ||
-        node.metaValue.meta === "array" ||
-        node.metaValue.meta === "group"
+        node.data.meta === "block" ||
+        node.data.meta === "array" ||
+        node.data.meta === "group"
     );
 }
 
@@ -30,7 +25,7 @@ export function transformer(tokens: Token[]) {
 
     let token: Token;
 
-    const group = (beginToken: Token): ValueToken<CompoundMetaValue> => {
+    const group = (beginToken: Token): ValueToken<GroupMetaData<Node[]>> => {
         const nodes: Node[] = [];
         let last;
 
@@ -41,7 +36,7 @@ export function transformer(tokens: Token[]) {
             if (token.kind === "symbol" && token.value === ")") {
                 return {
                     kind: "value",
-                    metaValue: {
+                    data: {
                         meta: "group",
                         value: nodes,
                     },
@@ -53,10 +48,11 @@ export function transformer(tokens: Token[]) {
         throw new ProcessorError("Unclosed group", Range.from(beginToken.range.begin, last.range.end));
     };
 
-    const array = (beginToken: Token): ValueToken<ArrayMetaValue> => {
+    const array = (beginToken: Token): ValueToken<ArrayMetaData<Node[]>> => {
         const items: Node[] = [];
 
         //TODO: Keep safely throwing until end of array to parse more info
+        //TODO: Move the part of the evaluation to the transformer
 
         let last;
         let state = "value";
@@ -68,7 +64,7 @@ export function transformer(tokens: Token[]) {
                 if (token.value === "]") {
                     return {
                         kind: "value",
-                        metaValue: {
+                        data: {
                             meta: "array",
                             value: items
                         },
@@ -105,8 +101,8 @@ export function transformer(tokens: Token[]) {
         throw new ProcessorError("Unclosed array", Range.from(beginToken.range.begin, last.range.end));
     };
 
-    const block = (beginToken: Token): ValueToken<BlockMetaValue> => {
-        const properties: Property[] = [];
+    const block = (beginToken: Token): ValueToken<BlockMetaData<Node[]>> => {
+        const properties: Property<Node[]>[] = [];
 
         let last;
         let expected = "key";
@@ -128,7 +124,7 @@ export function transformer(tokens: Token[]) {
 
                 return {
                     kind: "value",
-                    metaValue: {
+                    data: {
                         meta: "block",
                         value: properties,
                     },

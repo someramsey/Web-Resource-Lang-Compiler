@@ -1,8 +1,10 @@
-import { NodeMetaValue } from "../processors/transformer";
+import { CompoundMetaData, PrimeMetaData } from "../meta";
+
+type ExpressionMetaData = PrimeMetaData | CompoundMetaData<Expression>;
 
 type LiteralExpressionFragment = {
     kind: "literal";
-    
+    data: ExpressionMetaData;
 };
 
 type IdentifierExpressionFragment = {

@@ -4,7 +4,7 @@ import { tokenizer } from "./processors/tokenizer";
 import { transformer } from "./processors/transformer";
 import { parser } from "./processors/parser";
 
-const data = fs.readFileSync("data/.sample", "utf-8");
+const data = fs.readFileSync("data/.assignment", "utf-8");
 
 const tokenizationResult = tokenizer(data);
 console.log(tokenizationResult);

@@ -1,3 +1,4 @@
+import { MetaData, PrimeMetaData } from "../meta";
 import { Position } from "../position";
 import { ProcessorError, ProcessorResult } from "../processor";
 import { Range, Ranged } from "../range";
@@ -10,10 +11,9 @@ const stringIndicators = ["'", '"'];
 type BaseToken<Kind extends string> = { kind: Kind; } & Ranged;
 
 export type BasicToken = { value: string; } & BaseToken<"symbol" | "none">;
-export type ValueToken<T extends MetaValue<string, unknown>> = { metaValue: T } & BaseToken<"value">
+export type ValueToken<T extends MetaData> = { data: T } & BaseToken<"value">
 
-export type PrimeMetaValue = MetaValue<"string", string> | MetaValue<"number", number>;
-export type Token = BasicToken | ValueToken<PrimeMetaValue>;
+export type Token = BasicToken | ValueToken<PrimeMetaData>;
 
 export function tokenizer(input: string): ProcessorResult<Token[]> {
     const output: Token[] = [];
@@ -48,7 +48,7 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
                 else if (char == stringTerminator) {
                     output.push({
                         kind: "value",
-                        metaValue: {
+                        data: {
                             meta: "string",
                             value: input.substring(foot.index, head.index - 1),
                         },
@@ -106,7 +106,7 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
             if (!digits.includes(char)) {
                 output.push({
                     kind: "value",
-                    metaValue: {
+                    data: {
                         meta: "number",
                         value: parseInt(input.substring(foot.index, head.index)),
                     },

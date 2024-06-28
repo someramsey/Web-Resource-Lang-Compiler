@@ -3,7 +3,7 @@ import { Instruction } from "../instructions/instruction";
 import { Iteration } from "../iteration";
 import { ProcessorError, ProcessorResult } from "../processor";
 import { Token } from "./tokenizer";
-import { Node, isCompound } from "./transformer";
+import { Node } from "./transformer";
 
 function identifier(iteration: Iteration<Node>) {
     const node = iteration.next();
@@ -38,23 +38,39 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
                 case "initiator": {
                     if (node.kind === "none") {
                         state = "reference";
+
                         expression.push({ kind: "reference", target: node.value });
                         continue;
                     } else if (node.kind === "value") {
                         state = "end";
 
+                        const data = node.data;
+                        let value;
 
-
-                        if(isCompound(node)) {
-
-                        //TODO: evaluate children nodes of compounds
+                        if (data.meta == "block") {
+                            value = data.value.map((property) => ({
+                                key: property.key,
+                                value: evaluate(property.value)
+                            }));
+                        } else if (data.meta == "array" || data.meta == "group") {
+                            value = evaluate(data.value);
+                        } else {
+                            value = data.value;
                         }
 
-                        // expression.push({ kind: "literal", metaValue: node.metaValue });
+                        expression.push({ kind: "literal", data: { meta: data.meta, value } });
                         continue;
                     }
 
-                    throw new ProcessorError("Unexpected token", node.range);
+
+
+
+
+
+
+                    console.log(node);
+
+                    throw new ProcessorError("Unexpected token, expected initiator", node.range);
                 };
 
                 case "reference": {
@@ -63,16 +79,17 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
                         continue;
                     }
 
-                    throw new ProcessorError("Unexpected token", node.range);
+                    throw new ProcessorError("Unexpected token, expected dot", node.range);
                 };
 
                 case "accessor": {
                     if (node.kind === "none") {
                         state = "reference";
                         expression.push({ kind: "reference", target: node.value });
+                        continue;
                     }
 
-                    throw new ProcessorError("Unexpected token", node.range);
+                    throw new ProcessorError("Unexpected token, expected accessor", node.range);
                 };
             }
         }

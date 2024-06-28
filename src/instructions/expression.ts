@@ -2,8 +2,7 @@ import { NodeMetaValue } from "../processors/transformer";
 
 export type LiteralExpressionFragment<T extends NodeMetaValue = NodeMetaValue> = {
     kind: "literal";
-    meta: T["meta"];
-    value: T["value"];
+    metaValue: T;
 };
 
 export type ReferenceExpressionFragment = {

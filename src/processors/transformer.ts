@@ -65,14 +65,14 @@ export function transformer(tokens: Token[]) {
                         value: items
                     };
                 } else if (token.value === ",") {
-                    if(state !== "seperator" && state !== "comma") {
+                    if (state !== "seperator" && state !== "comma") {
                         throw new ProcessorError("Expected value or reference", token.range);
                     }
 
                     state = "value";
                     continue;
                 } else if (token.value === ".." || token.value === "...") {
-                    if(state !== "seperator") {
+                    if (state !== "seperator") {
                         throw new ProcessorError("Expected value or reference", token.range);
                     }
 
@@ -83,9 +83,9 @@ export function transformer(tokens: Token[]) {
                 throw new ProcessorError("Expected value or reference", token.range);
             }
 
-            if(state === "value") {
+            if (state === "value") {
                 state = "seperator";
-            } else if(state === "range-value") {
+            } else if (state === "range-value") {
                 state = "comma";
             }
 

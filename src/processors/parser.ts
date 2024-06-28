@@ -45,9 +45,23 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
         throw new ProcessorError("Failed to evaluate: Unexpected token", node.range);
     }
 
-    const evaluate = (iteration: Iteration<Node>): Expression => {
+    const evaluate = (nodes: Node[]): Expression => {
         const expression: Expression = [];
 
+        let state = "any";
+
+        for (const node of nodes) {
+            if (node.kind === "none") {
+                state = "reference";
+            } else if (node.kind === "value") {
+                state = "literal";
+
+                expression.push({
+                    kind: "literal",
+                    metaValue: { ...node }
+                });
+            }
+        }
 
         return expression;
     };
@@ -55,8 +69,18 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
     const assignment = () => {
         const id = identifier(iteration);
         symbol(iteration.next(), ":");
-        const expression = evaluate(iteration);
-        symbol(iteration.current, ";");
+
+        const expressionNodes: Node[] = [];
+
+        while (iteration.next()) {
+            if (iteration.current.kind === "symbol" && iteration.current.value === ";") {
+                break;
+            }
+
+            expressionNodes.push(iteration.current);
+        }
+
+        const expression = evaluate(expressionNodes);
 
         output.push({ kind: "assignment", id, expression });
     };

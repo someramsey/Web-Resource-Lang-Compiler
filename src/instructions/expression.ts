@@ -1,20 +1,15 @@
 import { NodeMetaValue } from "../processors/transformer";
 
-export type LiteralExpressionFragment<T extends NodeMetaValue = NodeMetaValue> = {
+type LiteralExpressionFragment = {
     kind: "literal";
-    metaValue: T;
+    
 };
 
-export type ReferenceExpressionFragment = {
-    kind: "reference";
+type IdentifierExpressionFragment = {
+    kind: "reference" | "accessor";
     target: string;
 };
 
-export type AccessorExpressionFragment = {
-    kind: "accessor";
-    target: string;
-};
-
-export type ExpressionFragment = LiteralExpressionFragment | ReferenceExpressionFragment | AccessorExpressionFragment;
+export type ExpressionFragment = LiteralExpressionFragment | IdentifierExpressionFragment;
 
 export type Expression = ExpressionFragment[];

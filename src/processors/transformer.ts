@@ -1,9 +1,7 @@
 import { Iteration } from "../iteration";
-import { ProcessorError } from "../processor";
+import { ProcessorError } from "../processor"; 
 import { Range } from "../range";
 import { PrimeMetaValue, Token, ValueToken } from "./tokenizer";
-
-
 
 export type Property = { key: string; value: Node[]; }
 
@@ -12,9 +10,17 @@ export type ArrayMetaValue = MetaValue<"array", Node[]>;
 export type GroupMetaValue = MetaValue<"group", Node[]>;
 
 export type CompoundMetaValue = BlockMetaValue | ArrayMetaValue | GroupMetaValue;
-export type NodeMetaValue = CompoundMetaValue | PrimeMetaValue
+export type NodeMetaValue = CompoundMetaValue | PrimeMetaValue;
 
-export type Node = Token | ValueToken<CompoundMetaValue>
+export type Node = Token | ValueToken<CompoundMetaValue>;
+
+export function isCompound(node: Node): node is ValueToken<CompoundMetaValue> {
+    return node.kind === "value" && (
+        node.metaValue.meta === "block" ||
+        node.metaValue.meta === "array" ||
+        node.metaValue.meta === "group"
+    );
+}
 
 export function transformer(tokens: Token[]) {
     const iteration = new Iteration(tokens);
@@ -35,8 +41,10 @@ export function transformer(tokens: Token[]) {
             if (token.kind === "symbol" && token.value === ")") {
                 return {
                     kind: "value",
-                    meta: "group",
-                    value: nodes,
+                    metaValue: {
+                        meta: "group",
+                        value: nodes,
+                    },
                     range: Range.between(beginToken, token)
                 };
             }
@@ -60,9 +68,11 @@ export function transformer(tokens: Token[]) {
                 if (token.value === "]") {
                     return {
                         kind: "value",
-                        meta: "array",
+                        metaValue: {
+                            meta: "array",
+                            value: items
+                        },
                         range: Range.between(beginToken, token),
-                        value: items
                     };
                 } else if (token.value === ",") {
                     if (state !== "seperator" && state !== "comma") {
@@ -118,8 +128,10 @@ export function transformer(tokens: Token[]) {
 
                 return {
                     kind: "value",
-                    meta: "block",
-                    value: properties,
+                    metaValue: {
+                        meta: "block",
+                        value: properties,
+                    },
                     range: Range.from(beginToken.range.begin, token.range.end)
                 };
             }

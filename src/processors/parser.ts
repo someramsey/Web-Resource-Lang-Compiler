@@ -1,9 +1,9 @@
-import { Expression, LiteralExpressionFragment, ReferenceExpressionFragment } from "../instructions/expression";
+import { Expression } from "../instructions/expression";
 import { Instruction } from "../instructions/instruction";
 import { Iteration } from "../iteration";
 import { ProcessorError, ProcessorResult } from "../processor";
 import { Token } from "./tokenizer";
-import { Node } from "./transformer";
+import { Node, isCompound } from "./transformer";
 
 function identifier(iteration: Iteration<Node>) {
     const node = iteration.next();
@@ -28,38 +28,52 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
     const output: Instruction[] = [];
     const errors: ProcessorError[] = [];
 
-    const evaluateValueFragment = (node: Node): LiteralExpressionFragment | ReferenceExpressionFragment => {
-        if (node.kind === "none") {
-            return {
-                kind: "reference",
-                target: node.value
-            };
-        } else if (node.kind === "value") {
-            return {
-                kind: "literal",
-                meta: node.meta,
-                value: node.value
-            };
-        }
-
-        throw new ProcessorError("Failed to evaluate: Unexpected token", node.range);
-    }
-
     const evaluate = (nodes: Node[]): Expression => {
         const expression: Expression = [];
 
-        let state = "any";
+        let state = "initiator";
 
         for (const node of nodes) {
-            if (node.kind === "none") {
-                state = "reference";
-            } else if (node.kind === "value") {
-                state = "literal";
+            switch (state) {
+                case "initiator": {
+                    if (node.kind === "none") {
+                        state = "reference";
+                        expression.push({ kind: "reference", target: node.value });
+                        continue;
+                    } else if (node.kind === "value") {
+                        state = "end";
 
-                expression.push({
-                    kind: "literal",
-                    metaValue: { ...node }
-                });
+
+
+                        if(isCompound(node)) {
+
+                        //TODO: evaluate children nodes of compounds
+                        }
+
+                        // expression.push({ kind: "literal", metaValue: node.metaValue });
+                        continue;
+                    }
+
+                    throw new ProcessorError("Unexpected token", node.range);
+                };
+
+                case "reference": {
+                    if (node.kind === "symbol" && node.value === ".") {
+                        state = "accessor";
+                        continue;
+                    }
+
+                    throw new ProcessorError("Unexpected token", node.range);
+                };
+
+                case "accessor": {
+                    if (node.kind === "none") {
+                        state = "reference";
+                        expression.push({ kind: "reference", target: node.value });
+                    }
+
+                    throw new ProcessorError("Unexpected token", node.range);
+                };
             }
         }
 

@@ -82,7 +82,10 @@ export function transformer(tokens: Token[]) {
                         throw new ProcessorError("Expected value or reference", token.range);
                     }
 
-                    state = "range-value";
+                    state = "literal-value";
+                    continue;
+                } else if(token.value === ".") {
+                    state = "value";
                     continue;
                 }
 
@@ -91,8 +94,13 @@ export function transformer(tokens: Token[]) {
 
             if (state === "value") {
                 state = "seperator";
-            } else if (state === "range-value") {
+            } else if (state === "literal-value") {
                 state = "comma";
+
+
+                if (token.kind !== "value") {
+                    throw new ProcessorError("Expected number", token.range);
+                }
             }
 
             items.push(transform(token));

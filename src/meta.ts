@@ -1,4 +1,4 @@
-type MetaType<Meta extends string, Value> = {
+type MetaValue<Meta extends string, Value> = {
     meta: Meta;
     value: Value;
 };

@@ -45,34 +45,9 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
         throw new ProcessorError("Failed to evaluate: Unexpected token", node.range);
     }
 
-    //TODO: add keyof, valueof and in modifiers
     const evaluate = (iteration: Iteration<Node>): Expression => {
         const expression: Expression = [];
 
-        iteration.next();
-
-        //check for modifiers
-        if (iteration.current.kind == "none") {
-            //add the modiiers to the expression
-        }
-
-
-        expression.push(evaluateValueFragment(iteration.current));
-
-        iteration.next();
-
-        if (iteration.current.kind === "value" && iteration.current.meta == "array") {
-            if (iteration.current.value.length > 1) {
-                throw new ProcessorError("Unexpected token, array accessors must have one item", iteration.current.range);
-            }
-
-            expression.push({
-                kind: "accessor",
-                query: evaluateValueFragment(iteration.current.value[0])
-            });
-
-            iteration.next();
-        }
 
         return expression;
     };
@@ -88,21 +63,6 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
 
     const font = () => {
         let name: Token[] = [];
-
-        while (iteration.next()) {
-            //read name
-            if (iteration.current.kind == "none") {
-                name.push(iteration.current);
-            } else if (iteration.current.kind == "symbol" && iteration.current.value == "(") {
-                const paramId = identifier(iteration);
-                symbol(iteration.next(), ":");
-                const expression = evaluate(iteration);
-
-                //add name parameter
-            } else if (iteration.current.kind == "value" && iteration.current.meta == "block") {
-                //parse the contents of the set
-            }
-        }
 
         errors.push(new ProcessorError("Unfinished statement at eof", iteration.current.range));
     };

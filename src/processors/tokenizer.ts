@@ -3,7 +3,7 @@ import { ProcessorError, ProcessorResult } from "../processor";
 import { Range, Ranged } from "../range";
 
 const breaks = [" ", "\t", "\n", "\r"];
-const symbols = ["(", ")", "{", "}", "[", "]", ",", ";", ":", ".", "-"];
+const symbols = ["(", ")", "{", "}", "[", "]", ",", ";", ":", "-"];
 const digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 const stringIndicators = ["'", '"'];
 
@@ -11,10 +11,10 @@ type BaseToken<Kind extends string> = { kind: Kind; } & Ranged;
 
 export type BasicToken = { value: string; } & BaseToken<"symbol" | "none">;
 
-export type ValueToken<T extends MetaType<string, unknown>> = BaseToken<"value"> & T;
+export type ValueToken<T extends MetaValue<string, unknown>> = BaseToken<"value"> & T;
 
-export type PrimeMetaType = MetaType<"string", string> | MetaType<"number", number>;
-export type Token = BasicToken | ValueToken<PrimeMetaType>;
+export type PrimeMetaValue = MetaValue<"string", string> | MetaValue<"number", number>;
+export type Token = BasicToken | ValueToken<PrimeMetaValue>;
 
 export function tokenizer(input: string): ProcessorResult<Token[]> {
     const output: Token[] = [];
@@ -80,6 +80,24 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
         }
     };
 
+    const dot = () => {
+        while (head.index < input.length) {
+            const char = input[head.index];
+
+            if (char !== ".") {
+                output.push({
+                    kind: "symbol",
+                    value: input.substring(foot.index - 1, head.index),
+                    range: Range.from(foot, head)
+                });
+
+                break;
+            }
+
+            head.index++;
+        }
+    };
+
     const number = () => {
         while (head.index < input.length) {
             const char = input[head.index];
@@ -92,7 +110,7 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
                     range: Range.from(foot, head)
                 });
 
-                return;
+                break;
             }
 
             head.index++;
@@ -102,16 +120,15 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
     const capture = (char) => {
         switch (char) {
             case "#": return comment;
+            case ".": return dot;
         }
 
-        if (digits.includes(char)) return number;
-
-        if (stringIndicators.includes(char)) {
+        if (digits.includes(char)) {
+            return number;
+        } else if (stringIndicators.includes(char)) {
             stringTerminator = char;
             return string;
-        }
-
-        if (symbols.includes(char)) return () => {
+        } else if (symbols.includes(char)) return () => {
             output.push({
                 kind: "symbol",
                 value: char,

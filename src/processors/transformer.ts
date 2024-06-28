@@ -1,17 +1,20 @@
 import { Iteration } from "../iteration";
 import { ProcessorError } from "../processor";
 import { Range } from "../range";
-import { Token, ValueToken } from "./tokenizer";
+import { PrimeMetaValue, Token, ValueToken } from "./tokenizer";
+
+
 
 export type Property = { key: string; value: Node[]; }
 
-export type BlockMetaType = MetaType<"block", Property[]>;
-export type ArrayMetaType = MetaType<"array", Node[]>;
-export type GroupMetaType = MetaType<"group", Node[]>;
+export type BlockMetaValue = MetaValue<"block", Property[]>;
+export type ArrayMetaValue = MetaValue<"array", Node[]>;
+export type GroupMetaValue = MetaValue<"group", Node[]>;
 
-export type CompoundMetaType = BlockMetaType | ArrayMetaType | GroupMetaType;
+export type CompoundMetaValue = BlockMetaValue | ArrayMetaValue | GroupMetaValue;
+export type NodeMetaValue = CompoundMetaValue | PrimeMetaValue
 
-export type Node = Token | ValueToken<CompoundMetaType>
+export type Node = Token | ValueToken<CompoundMetaValue>
 
 export function transformer(tokens: Token[]) {
     const iteration = new Iteration(tokens);
@@ -21,7 +24,7 @@ export function transformer(tokens: Token[]) {
 
     let token: Token;
 
-    const group = (beginToken: Token): ValueToken<CompoundMetaType> => {
+    const group = (beginToken: Token): ValueToken<CompoundMetaValue> => {
         const nodes: Node[] = [];
         let last;
 
@@ -42,13 +45,14 @@ export function transformer(tokens: Token[]) {
         throw new ProcessorError("Unclosed group", Range.from(beginToken.range.begin, last.range.end));
     };
 
-    const array = (beginToken: Token): ValueToken<ArrayMetaType> => {
+    const array = (beginToken: Token): ValueToken<ArrayMetaValue> => {
         const items: Node[] = [];
 
         //TODO: Keep safely throwing until end of array to parse more info
 
         let last;
-        let coma = false;
+        let ranged = false;
+        let seperator = false;
 
         while (token = iteration.next()) {
             last = token;
@@ -63,26 +67,64 @@ export function transformer(tokens: Token[]) {
                     };
                 }
 
-                if (coma) {
-                    if (token.value !== ",") {
-                        throw new ProcessorError("Expected coma", token.range);
+                if (seperator) {
+                    if (token.value === ",") {
+                        seperator = false;
+                        continue;
+                    } else if(token.value === ".." || token.value === "...") {
+                        ranged = true;
+                        continue;
                     }
-
-                    coma = false;
-                    continue;
                 }
 
+                
+                
                 throw new ProcessorError("Expected value or reference", token.range);
+
+
+
+
+
+
+                // if (seperator === "seperator") {
+                //     if (token.value === "," || token.value === ".." || token.value === "...") {
+                //         seperator = "value";
+                //         continue;
+                //     }
+
+                //     throw new ProcessorError("Expected comma or range operator", token.range);
+                // }
+
+                // throw new ProcessorError("Expected value or reference", token.range);
             }
 
-            coma = true;
-            items.push(transform(token));
+            if (ranged) {
+                if (token.kind != "value") {
+                    throw new ProcessorError("Expected literal value: Range operator cannot be used with a reference", token.range);
+                } else if (token.meta != "number") {
+                    throw new ProcessorError("Expected number", token.range);
+                }
+
+                // if (ranged == "..") {
+
+                //     for (let i = 0; i < token.value; i++) {
+                //         items.push({ kind: "value", meta: "number", value: i, range: token.range });
+                //     }
+
+
+                // }
+            }
+
+
+            seperator = true;
+
+            const node = transform(token);
         }
 
         throw new ProcessorError("Unclosed array", Range.from(beginToken.range.begin, last.range.end));
     };
 
-    const block = (beginToken: Token): ValueToken<BlockMetaType> => {
+    const block = (beginToken: Token): ValueToken<BlockMetaValue> => {
         const properties: Property[] = [];
 
         let last;

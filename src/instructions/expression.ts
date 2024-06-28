@@ -1,9 +1,6 @@
-import { PrimeMetaType } from "../processors/tokenizer";
-import { CompoundMetaType } from "../processors/transformer";
+import { NodeMetaValue } from "../processors/transformer";
 
-type NodeMeta = CompoundMetaType | PrimeMetaType
-
-export type LiteralExpressionFragment<T extends NodeMeta = NodeMeta> = {
+export type LiteralExpressionFragment<T extends NodeMetaValue = NodeMetaValue> = {
     kind: "literal";
     meta: T["meta"];
     value: T["value"];
@@ -16,7 +13,7 @@ export type ReferenceExpressionFragment = {
 
 export type AccessorExpressionFragment = {
     kind: "accessor";
-    query: LiteralExpressionFragment | ReferenceExpressionFragment;
+    target: string;
 };
 
 export type ExpressionFragment = LiteralExpressionFragment | ReferenceExpressionFragment | AccessorExpressionFragment;

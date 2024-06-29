@@ -1,5 +1,5 @@
 let from: 100;
 let to: 200;
-let c: [10, from...to, 200..300 a.c];
+let c: [10, from...to, 200..300, a.c];
 let a: { a: 'a', b: 10, c: 'dw'};
 let b: a.b;

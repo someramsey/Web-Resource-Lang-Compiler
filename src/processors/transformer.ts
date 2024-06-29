@@ -53,13 +53,14 @@ export function transformer(tokens: Token[]) {
         const items: ArrayItem<Node[]>[] = [];
         const begin = iteration.current;
 
-        let state = "object";
-
         const readObject = () => {
             if (token.kind == "value") {
-                return [token];
+                const val = { ...token };
+                token = iteration.next();
+
+                return [val];
             } else if (token.kind == "none") {
-                const nodes: Node[] = [];
+                const nodes: Node[] = [token];
 
                 while (token = iteration.next()) {
                     if (token.kind === "symbol" && token.value !== ".") {
@@ -81,9 +82,19 @@ export function transformer(tokens: Token[]) {
             }
 
             if (token.kind === "symbol") {
+                if (token.value === "]") {
+                    return {
+                        kind: "value",
+                        data: {
+                            meta: "array",
+                            value: items
+                        },
+                        range: Range.between(begin, token)
+                    };
+                }
+
                 if (token.value === ",") {
                     items.push({ kind: "single", value: object });
-                    console.log({ kind: "single", value: object });
                 } else if (token.value === ".." || token.value === "...") {
                     const inclusive = token.value === "..";
 
@@ -95,11 +106,10 @@ export function transformer(tokens: Token[]) {
                     }
 
                     items.push({ kind: "range", inclusive, from: object, to: rangeEnd });
-                    console.log({ kind: "range", inclusive, from: object, to: rangeEnd });
                 }
+            } else {
+                throw new ProcessorError("Expected comma or range operator", token.range);
             }
-
-            throw new ProcessorError("Expected comma or range operator", token.range);
         }
 
         throw new ProcessorError("Unclosed array", Range.from(begin.range.begin, iteration.last.range.end));

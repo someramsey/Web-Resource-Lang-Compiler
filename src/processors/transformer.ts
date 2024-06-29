@@ -55,30 +55,53 @@ export function transformer(tokens: Token[]) {
 
         let state = "object";
 
-        while (token = iteration.next()) {
-            switch (state) {
-                case "object": {
-                    if (token.kind == "none") {
-                        const nodes: Node[] = [];
+        const readObject = () => {
+            if (token.kind == "value") {
+                return [token];
+            } else if (token.kind == "none") {
+                const nodes: Node[] = [];
 
-                        while (token = iteration.next()) {
-                            if (token.kind === "symbol") {
-                                if (token.value === "...") {
-
-                                    break;
-                                }
-
-                            }
-
-                            nodes.push(transform(token));
-                        }
-
-                        items.push({ kind: "single", value: nodes });
+                while (token = iteration.next()) {
+                    if (token.kind === "symbol" && token.value !== ".") {
+                        return nodes;
                     }
 
-                } break;
+                    nodes.push(transform(token));
+                }
+
+                throw new ProcessorError("Unclosed array", Range.from(begin.range.begin, iteration.last.range.end));
             }
         }
+
+        while (token = iteration.next()) {
+            const object = readObject();
+
+            if (!object) {
+                throw new ProcessorError("Expected object", token.range);
+            }
+
+            if (token.kind === "symbol") {
+                if (token.value === ",") {
+                    items.push({ kind: "single", value: object });
+                    console.log({ kind: "single", value: object });
+                } else if (token.value === ".." || token.value === "...") {
+                    const inclusive = token.value === "..";
+
+                    token = iteration.next();
+                    const rangeEnd = readObject();
+
+                    if (!rangeEnd) {
+                        throw new ProcessorError("Expected object", token.range);
+                    }
+
+                    items.push({ kind: "range", inclusive, from: object, to: rangeEnd });
+                    console.log({ kind: "range", inclusive, from: object, to: rangeEnd });
+                }
+            }
+
+            throw new ProcessorError("Expected comma or range operator", token.range);
+        }
+
         throw new ProcessorError("Unclosed array", Range.from(begin.range.begin, iteration.last.range.end));
     };
 

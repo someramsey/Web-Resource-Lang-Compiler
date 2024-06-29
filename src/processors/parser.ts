@@ -62,14 +62,6 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
                         continue;
                     }
 
-
-
-
-
-
-
-                    console.log(node);
-
                     throw new ProcessorError("Unexpected token, expected initiator", node.range);
                 };
 

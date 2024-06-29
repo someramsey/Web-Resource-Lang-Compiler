@@ -1,6 +1,7 @@
 export class Iteration<T> {
     private iterator: Iterator<T>;
-    private curr: T | undefined;
+    private _current: T | undefined;
+    private _last: T | undefined;
 
     constructor(iterable: Iterable<T>) {
         this.iterator = iterable[Symbol.iterator]();
@@ -8,11 +9,16 @@ export class Iteration<T> {
 
     next(): T {
         const value = this.iterator.next().value;
-        this.curr = value;
+        this._last = this._current;
+        this._current = value;
         return value;
     }
 
     get current(): T {
-        return this.curr!;
+        return this._current!;
+    }
+
+    get last(): T {
+        return this._last!;
     }
 }

@@ -27,6 +27,30 @@ export function transformer(tokens: Token[]) {
 
     let token: Token;
 
+
+    const readObject = () => {
+        if (token.kind == "value") {
+            const val = { ...token };
+            token = iteration.next();
+
+            return [val];
+        } else if (token.kind == "none") {
+            const nodes: Node[] = [token];
+
+            while (token = iteration.next()) {
+                if (token.kind === "symbol" && token.value !== ".") {
+                    return nodes;
+                }
+
+                nodes.push(transform(token));
+            }
+
+            throw new ProcessorError("Unclosed array", iteration.last.range);
+        }
+
+        throw new ProcessorError("Expected object", token.range);
+    };
+
     const group = (): ValueToken<GroupMetaData<Node[]>> => {
         const nodes: Node[] = [];
         const begin = iteration.current;
@@ -53,33 +77,8 @@ export function transformer(tokens: Token[]) {
         const items: ArrayItem<Node[]>[] = [];
         const begin = iteration.current;
 
-        const readObject = () => {
-            if (token.kind == "value") {
-                const val = { ...token };
-                token = iteration.next();
-
-                return [val];
-            } else if (token.kind == "none") {
-                const nodes: Node[] = [token];
-
-                while (token = iteration.next()) {
-                    if (token.kind === "symbol" && token.value !== ".") {
-                        return nodes;
-                    }
-
-                    nodes.push(transform(token));
-                }
-
-                throw new ProcessorError("Unclosed array", Range.from(begin.range.begin, iteration.last.range.end));
-            }
-        }
-
         while (token = iteration.next()) {
             const object = readObject();
-
-            if (!object) {
-                throw new ProcessorError("Expected object", token.range);
-            }
 
             if (token.kind === "symbol") {
                 if (token.value === "]") {
@@ -99,13 +98,8 @@ export function transformer(tokens: Token[]) {
                     const inclusive = token.value === "..";
 
                     token = iteration.next();
-                    const rangeEnd = readObject();
 
-                    if (!rangeEnd) {
-                        throw new ProcessorError("Expected object", token.range);
-                    }
-
-                    items.push({ kind: "range", inclusive, from: object, to: rangeEnd });
+                    items.push({ kind: "range", inclusive, from: object, to: readObject() });
                 }
             } else {
                 throw new ProcessorError("Expected comma or range operator", token.range);
@@ -119,7 +113,54 @@ export function transformer(tokens: Token[]) {
         const properties: Property<Node[]>[] = [];
         const begin = iteration.current;
 
+        let key = "";
+        let state = "key";
+
         while (token = iteration.next()) {
+            if (token.kind === "symbol") {
+                if (token.value === "}") {
+                    return {
+                        kind: "value",
+                        data: {
+                            meta: "block",
+                            value: properties
+                        },
+                        range: Range.between(begin, token)
+                    };
+                }
+            }
+
+            switch (state) {
+                case "key": {
+                    if (token.kind !== "none") {
+                        throw new ProcessorError("Expected key", token.range);
+                    }
+
+                    key = token.value;
+                    state = "colon";
+                } break;
+
+                case "colon": {
+                    if (token.kind !== "symbol" || token.value !== ":") {
+                        throw new ProcessorError("Expected colon", token.range);
+                    }
+
+                    state = "object";
+                } break;
+
+                case "object": {
+                    properties.push({ key, value: readObject() });
+                    state = "seperator";
+                } break;
+
+                case "seperator": {
+                    if (token.kind !== "symbol" || (token.value !== "," && token.value !== ";")) {
+                        throw new ProcessorError("Expected comma or semicolon", token.range);
+                    }
+
+                    state = "key";
+                } break;
+            }
 
         }
 

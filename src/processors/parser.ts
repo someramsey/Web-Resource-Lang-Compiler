@@ -28,66 +28,66 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
     const output: Instruction[] = [];
     const errors: ProcessorError[] = [];
 
-    const evaluate = (nodes: Node[]): Expression => {
-        const expression: Expression = [];
+    // const evaluate = (nodes: Node[]): Expression => {
+    //     const expression: Expression = [];
 
-        let state = "initiator";
+    //     let state = "initiator";
 
-        for (const node of nodes) {
-            switch (state) {
-                case "initiator": {
-                    if (node.kind === "none") {
-                        state = "reference";
+    //     for (const node of nodes) {
+    //         switch (state) {
+    //             case "initiator": {
+    //                 if (node.kind === "none") {
+    //                     state = "reference";
 
-                        expression.push({ kind: "reference", target: node.value });
-                        continue;
-                    } else if (node.kind === "value") {
-                        state = "end";
+    //                     expression.push({ kind: "reference", target: node.value });
+    //                     continue;
+    //                 } else if (node.kind === "value") {
+    //                     state = "end";
 
-                        const data = node.data;
-                        let value;
+    //                     const data = node.data;
+    //                     let value;
 
-                        if (data.meta == "block") {
-                            value = data.value.map((property) => ({
-                                key: property.key,
-                                value: evaluate(property.value)
-                            }));
-                        } else if (data.meta == "array" || data.meta == "group") {
-                            value = evaluate(data.value);
-                        } else {
-                            value = data.value;
-                        }
+    //                     if (data.meta == "block") {
+    //                         value = data.value.map((property) => ({
+    //                             key: property.key,
+    //                             value: evaluate(property.value)
+    //                         }));
+    //                     } else if (data.meta == "array" || data.meta == "group") {
+    //                         value = evaluate(data.value);
+    //                     } else {
+    //                         value = data.value;
+    //                     }
 
-                        expression.push({ kind: "literal", data: { meta: data.meta, value } });
-                        continue;
-                    }
+    //                     expression.push({ kind: "literal", data: { meta: data.meta, value } });
+    //                     continue;
+    //                 }
 
-                    throw new ProcessorError("Unexpected token, expected initiator", node.range);
-                };
+    //                 throw new ProcessorError("Unexpected token, expected initiator", node.range);
+    //             };
 
-                case "reference": {
-                    if (node.kind === "symbol" && node.value === ".") {
-                        state = "accessor";
-                        continue;
-                    }
+    //             case "reference": {
+    //                 if (node.kind === "symbol" && node.value === ".") {
+    //                     state = "accessor";
+    //                     continue;
+    //                 }
 
-                    throw new ProcessorError("Unexpected token, expected dot", node.range);
-                };
+    //                 throw new ProcessorError("Unexpected token, expected dot", node.range);
+    //             };
 
-                case "accessor": {
-                    if (node.kind === "none") {
-                        state = "reference";
-                        expression.push({ kind: "reference", target: node.value });
-                        continue;
-                    }
+    //             case "accessor": {
+    //                 if (node.kind === "none") {
+    //                     state = "reference";
+    //                     expression.push({ kind: "reference", target: node.value });
+    //                     continue;
+    //                 }
 
-                    throw new ProcessorError("Unexpected token, expected accessor", node.range);
-                };
-            }
-        }
+    //                 throw new ProcessorError("Unexpected token, expected accessor", node.range);
+    //             };
+    //         }
+    //     }
 
-        return expression;
-    };
+    //     return expression;
+    // };
 
     const assignment = () => {
         const id = identifier(iteration);
@@ -103,9 +103,9 @@ export function parser(nodes: Node[]): ProcessorResult<Instruction[]> {
             expressionNodes.push(iteration.current);
         }
 
-        const expression = evaluate(expressionNodes);
+        // const expression = evaluate(expressionNodes);
 
-        output.push({ kind: "assignment", id, expression });
+        output.push({ kind: "assignment", id, expression: [] }); //TODO: reimplement evaluation
     };
 
     const font = () => {

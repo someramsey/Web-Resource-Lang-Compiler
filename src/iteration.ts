@@ -21,16 +21,4 @@ export class Iteration<T> {
     get last(): T {
         return this._last!;
     }
-
-
-
-    until(predicate: (value: T) => boolean, ended?: () => void) {
-        while (this.next()) {
-            if (predicate(this.current)) {
-                break;
-            }
-        }
-
-        ended?.();
-    }
 }

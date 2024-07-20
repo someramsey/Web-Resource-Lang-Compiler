@@ -1,9 +1,10 @@
-import { Position } from "./position";
 import { Token } from "./processors/tokenizer";
 
-export type Ranged = {
-    range: Range;
-};
+export type Position = {
+    column: number;
+    line: number;
+    index: number;
+}
 
 export class Range {
     public begin: Position;
@@ -22,3 +23,7 @@ export class Range {
         return new Range(begin.range.begin, end.range.end);
     }
 }
+
+export type Ranged = {
+    range: Range;
+};

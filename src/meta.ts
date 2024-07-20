@@ -1,14 +1,16 @@
-export type Property<T> = { key: string; value: T; }
-export type ArrayItem<T> = { kind: "range", inclusive: boolean, from: T, to: T } | { kind: "single", value: T };
+import { Expression } from "./expression";
 
-export type BlockMetaData<T> = MetaData<"block", Property<T>[]>;
-export type ArrayMetaData<T> = MetaData<"array", ArrayItem<T>[]>;
-export type GroupMetaData<T> = MetaData<"group", T>;
+export type Property = { key: string; expression: Expression; }
+export type ArrayItem = { kind: "range", inclusive: boolean, from: Expression, to: Expression } | { kind: "single", expression: Expression };
+
+export type BlockMetaData = MetaData<"block", Property[]>;
+export type ArrayMetaData = MetaData<"array", ArrayItem[]>;
+export type GroupMetaData = MetaData<"group", Expression>;
 
 export type StringMetaData = MetaData<"string", string>;
 export type NumberMetaData = MetaData<"number", number>;
 
-export type CompoundMetaData<T = any> = BlockMetaData<T> | ArrayMetaData<T> | GroupMetaData<T>;
+export type CompoundMetaData = BlockMetaData | ArrayMetaData | GroupMetaData;
 export type PrimeMetaData = StringMetaData | NumberMetaData;
 
 export type MetaData<Meta extends string = string, Value = any> = {

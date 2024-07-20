@@ -1,5 +1,4 @@
 import fs from "fs";
-import { Iteration } from "./iteration";
 import { tokenizer } from "./processors/tokenizer";
 import { transformer } from "./processors/transformer";
 import { parser } from "./processors/parser";

@@ -1,17 +1,16 @@
 import { MetaData, PrimeMetaData } from "../meta";
-import { Position } from "../position";
 import { ProcessorError, ProcessorResult } from "../processor";
-import { Range, Ranged } from "../range";
+import { Position, Range, Ranged } from "../range";
 
 const breaks = [" ", "\t", "\n", "\r"];
 const symbols = ["(", ")", "{", "}", "[", "]", ",", ";", ":", "-"];
 const digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 const stringIndicators = ["'", '"'];
 
-type BaseToken<Kind extends string> = { kind: Kind; } & Ranged;
+type Representable<Kind extends string> = { kind: Kind; } & Ranged;
 
-export type BasicToken = { value: string; } & BaseToken<"symbol" | "none">;
-export type ValueToken<T extends MetaData> = { data: T } & BaseToken<"value">
+export type BasicToken = { value: string; } & Representable<"symbol" | "none">;
+export type ValueToken<T extends MetaData> = { data: T } & Representable<"value">
 
 export type Token = BasicToken | ValueToken<PrimeMetaData>;
 
@@ -108,7 +107,7 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
                     kind: "value",
                     data: {
                         meta: "number",
-                        value: parseInt(input.substring(foot.index, head.index)),
+                        value: parseInt(input.substring(foot.index - 1, head.index)),
                     },
                     range: Range.from(foot, head)
                 });

@@ -1,8 +1,8 @@
-import { Expression, ExpressionExtender, ValueExpression } from "../expression";
 import { Iteration } from "../iteration";
 import { ArrayItem, ArrayMetaData, BlockMetaData, CompoundMetaData, GroupMetaData, PrimeMetaData, Property } from "../meta";
 import { ProcessorError } from "../processor";
 import { Range } from "../range";
+import { readExpression } from "./expresser";
 import { Token, ValueToken } from "./tokenizer";
 
 export type NodeMetaData = PrimeMetaData | CompoundMetaData;
@@ -25,87 +25,11 @@ export function transformer(tokens: Token[]) {
 
     let token: Token;
 
-    const readExpressionExtenders = (): ExpressionExtender[] => {
-        const extenders: ExpressionExtender[] = [];
-        let state = "none";
-
-        while (token = iteration.next()) {
-            switch (state) {
-                case "accessor": {
-                    if (token.kind !== "none") {
-                        throw new ProcessorError("Expected identifier", token.range);
-                    }
-
-                    extenders.push({
-                        kind: "acessor",
-                        name: token.value
-                    });
-
-                    state = "none";
-                } break;
-
-                case "indexer": {
-                    const indexExpression = readExpression();
-
-                    if (token.kind !== "symbol" || token.value !== "]") {
-                        throw new ProcessorError("Expected ']'", token.range);
-                    }
-
-                    extenders.push({
-                        kind: "indexer",
-                        expression: indexExpression
-                    });
-
-                    state = "none";
-                } break;
-
-                case "none": {
-                    if (token.kind === "symbol") {
-                        if (token.value === ".") {
-                            state = "accessor";
-                        } else if (token.value === "[") {
-                            state = "indexer";
-                        } else {
-                            return extenders;
-                        }
-                    } else {
-                        return extenders;
-                    }
-                };
-            }
-        }
-
-        throw new ProcessorError("Unexpected end of file", iteration.last.range);
-
-    }
-
-    const readExpression = (): Expression => {
-        const node = transform(token);
-
-        if (node.kind == "value") {
-            const value: ValueExpression = {
-                kind: "value",
-                data: node.data
-            };
-
-            token = iteration.next();
-
-            return value;
-        } else if (node.kind == "none") {
-            return {
-                kind: "reference",
-                name: node.value,
-                extenders: readExpressionExtenders()
-            };
-        }
-
-        throw new ProcessorError("Expected expression", node.range);
-    };
-
     const readGroup = (): GroupMetaData => {
         token = iteration.next();
 
-        const expression = readExpression();
+        const expression = readExpression(iteration, transform);
+        token = iteration.current;
 
         if (token.kind !== "symbol" || token.value !== ")") {
             throw new ProcessorError("Expected ')'", token.range);
@@ -122,7 +46,8 @@ export function transformer(tokens: Token[]) {
         const begin = iteration.current;
 
         while (token = iteration.next()) {
-            const expression = readExpression();
+            const expression = readExpression(iteration, transform);
+            token = iteration.current;
 
             if (token.kind !== "symbol") {
                 throw new ProcessorError("Expected ']' or comma or range operator", token.range);
@@ -154,13 +79,14 @@ export function transformer(tokens: Token[]) {
                         kind: "range",
                         inclusive,
                         from: expression,
-                        to: readExpression()
+                        to: readExpression(iteration, transform)
                     });
+                    token = iteration.current;
 
                     if (token.kind !== "symbol") {
                         throw new ProcessorError("Expected comma or ']'", token.range);
                     }
-                    
+
                     if (token.value == "]") {
                         return {
                             meta: "array",
@@ -220,8 +146,9 @@ export function transformer(tokens: Token[]) {
 
                 case "object": {
                     properties.push({
-                        key, expression: readExpression()
+                        key, expression: readExpression(iteration, transform)
                     });
+                    token = iteration.current;
 
                     state = "seperator";
                     continue;

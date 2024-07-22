@@ -1,12 +1,7 @@
 import fs from "fs";
-import { parser } from "./processors/parser";
-import { tokenizer } from "./processors/tokenizer";
+import { compile } from "./compilation/compiler";
 
 const data = fs.readFileSync("data/.sample", "utf-8");
+const result = compile(data);
 
-const tokenizationResult = tokenizer(data);
-console.log(tokenizationResult);
-const parserResult = parser(tokenizationResult.output);
-console.log(parserResult);
-
-while (true);
+console.log(result);

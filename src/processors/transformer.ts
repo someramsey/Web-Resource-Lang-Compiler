@@ -19,7 +19,7 @@ export function isCompound(node: Node): node is ValueToken<CompoundMetaData> {
 export function transformer(tokens: Token[]): Expression {
     const iteration = new Iteration(tokens);
 
-    let token: Token;
+    let token: Token = iteration.next();
 
     const readExpressionExtenders = (): ExpressionExtender[] => {
         const extenders: ExpressionExtender[] = [];
@@ -71,8 +71,7 @@ export function transformer(tokens: Token[]): Expression {
             }
         }
 
-        throw new ProcessorError("Unexpected end of file", iteration.last.range);
-
+        return extenders;
     }
 
     const readExpression = (): Expression => {
@@ -256,7 +255,7 @@ export function transformer(tokens: Token[]): Expression {
 
             token = iteration.next();
         }
-        
+
         throw new ProcessorError("Unclosed block", Range.between(begin, iteration.last));
     };
 

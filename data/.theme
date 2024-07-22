@@ -1,0 +1,12 @@
+let someColor: #ff0000;
+
+theme light: {
+    primary: someColor,
+    secondary: #00ff00,
+    something: {
+        a: #0000ff,
+        nested: {
+            color: #ff00ff
+        }
+    }
+};

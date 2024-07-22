@@ -1,5 +1,0 @@
-tokenizer
-transformer: reads all the clumped braces, brackets parantheses and groups the tokens inside them
-
-parser: parses the tokens into statements and expressions
-resolver: resolves the identifiers and variables

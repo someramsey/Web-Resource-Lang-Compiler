@@ -1,15 +1,11 @@
 import { Expression } from "../expression";
+import { Assignment, Instruction, ThemeDefinition } from "../instruction";
 import { Iteration } from "../iteration";
 import { ProcessorError, ProcessorResult } from "../processor";
 import { Token } from "./tokenizer";
 import { transformer } from "./transformer";
 
-type Assignment = {
-    identifier: string;
-    expression: Expression;
-};
 
-type Instruction = Assignment;
 
 export function parser(tokens: Token[]): ProcessorResult<Instruction[]> {
     const iteration = new Iteration(tokens);
@@ -37,7 +33,8 @@ export function parser(tokens: Token[]): ProcessorResult<Instruction[]> {
         }
     }
 
-    const assignment = (): Assignment => {
+    //instructions
+    const parseAssignment = (): Assignment => {
         next();
         const identifier = expectIdentifier();
 
@@ -50,6 +47,7 @@ export function parser(tokens: Token[]): ProcessorResult<Instruction[]> {
         while (iteration.next()) {
             if(iteration.current.kind === "symbol" && iteration.current.value === ";") {
                 return  {
+                    type: "assignment",
                     identifier,
                     expression: transformer(expressionTokens)
                 }
@@ -61,13 +59,17 @@ export function parser(tokens: Token[]): ProcessorResult<Instruction[]> {
         throw new ProcessorError("Unexpected end of file", iteration.last.range);
     };
 
+    // const parseThemeDefinition = (): ThemeDefinition => {
+        
+    // }
+
     const parse = (): Instruction => {
         if (iteration.current.kind !== "none") {
             throw new ProcessorError("Unexpected token, expected a statement", iteration.current.range);
         }
 
         switch (iteration.current.value) {
-            case "let": return assignment();
+            case "let": return parseAssignment();
         }
 
         throw new ProcessorError("Unknown instruction", iteration.current.range);

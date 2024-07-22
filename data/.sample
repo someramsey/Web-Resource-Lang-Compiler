@@ -1,20 +1,20 @@
 let red: #ff0000;
 
 theme light: {
-    primary: red;
-    secondary: #00ff00;
+    primary: red,
+    secondary: #00ff00,
     button: {
-        active: #0000ff;
+        active: #0000ff
     }
 };
 
 theme dark: {
-    primary: red;
-    secondary: #00ff00;
+    primary: red,
+    secondary: #00ff00,
     button: {
-        active: #0000ff;
+        active: #0000ff
     }
-} as default;
+};
 
 font montserrat {
     weight: [100...900];

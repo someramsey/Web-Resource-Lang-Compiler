@@ -1,8 +1,8 @@
+import { Expression, ExpressionExtender, ValueExpression } from "../expression";
 import { Iteration } from "../iteration";
 import { ArrayItem, ArrayMetaData, BlockMetaData, CompoundMetaData, GroupMetaData, PrimeMetaData, Property } from "../meta";
 import { ProcessorError } from "../processor";
 import { Range } from "../range";
-import { readExpression } from "./expresser";
 import { Token, ValueToken } from "./tokenizer";
 
 export type NodeMetaData = PrimeMetaData | CompoundMetaData;
@@ -16,20 +16,114 @@ export function isCompound(node: Node): node is ValueToken<CompoundMetaData> {
     );
 }
 
-//TODO: Keep safely throwing until end of array to parse more info
-export function transformer(tokens: Token[]) {
+export function transformer(tokens: Token[]): Expression {
     const iteration = new Iteration(tokens);
 
-    const output: Node[] = [];
-    const errors: ProcessorError[] = [];
-
     let token: Token;
+
+    const readExpressionExtenders = (): ExpressionExtender[] => {
+        const extenders: ExpressionExtender[] = [];
+        let state = "none";
+
+        while (token = iteration.next()) {
+            switch (state) {
+                case "accessor": {
+                    if (token.kind !== "none") {
+                        throw new ProcessorError("Expected identifier", token.range);
+                    }
+
+                    extenders.push({
+                        kind: "acessor",
+                        name: token.value
+                    });
+
+                    state = "none";
+                } break;
+
+                case "indexer": {
+                    const indexExpression = readExpression();
+
+                    if (token.kind !== "symbol" || token.value !== "]") {
+                        throw new ProcessorError("Expected ']'", token.range);
+                    }
+
+                    extenders.push({
+                        kind: "indexer",
+                        expression: indexExpression
+                    });
+
+                    state = "none";
+                } break;
+
+                case "none": {
+                    if (token.kind === "symbol") {
+                        if (token.value === ".") {
+                            state = "accessor";
+                        } else if (token.value === "[") {
+                            state = "indexer";
+                        } else {
+                            return extenders;
+                        }
+                    } else {
+                        return extenders;
+                    }
+                };
+            }
+        }
+
+        throw new ProcessorError("Unexpected end of file", iteration.last.range);
+
+    }
+
+    const readExpression = (): Expression => {
+        const node = transform(token);
+
+        if (node.kind == "value") {
+            const value: ValueExpression = {
+                kind: "value",
+                data: node.data
+            };
+
+            token = iteration.next();
+
+            return value;
+        } else if (node.kind == "none") {
+            return {
+                kind: "reference",
+                name: node.value,
+                extenders: readExpressionExtenders()
+            };
+        }
+
+        throw new ProcessorError("Expected expression", node.range);
+    };
+
+    
+    const transform = (token: Token): Node => {
+        if (token.kind !== "symbol") {
+            return token;
+        }
+
+        const begin = iteration.current;
+        let data: CompoundMetaData;
+
+        switch (token.value) {
+            case "(": data = readGroup(); break;
+            case "[": data = readArray(); break;
+            case "{": data = readBlock(); break;
+            default: return token;
+        }
+        
+        return {
+            kind: "value", data,
+            range: Range.between(begin, iteration.last)
+        };
+    };
 
     const readGroup = (): GroupMetaData => {
         token = iteration.next();
 
-        const expression = readExpression(iteration, transform);
-        token = iteration.current;
+        const expression = readExpression();
 
         if (token.kind !== "symbol" || token.value !== ")") {
             throw new ProcessorError("Expected ')'", token.range);
@@ -46,8 +140,7 @@ export function transformer(tokens: Token[]) {
         const begin = iteration.current;
 
         while (token = iteration.next()) {
-            const expression = readExpression(iteration, transform);
-            token = iteration.current;
+            const expression = readExpression();
 
             if (token.kind !== "symbol") {
                 throw new ProcessorError("Expected ']' or comma or range operator", token.range);
@@ -79,9 +172,8 @@ export function transformer(tokens: Token[]) {
                         kind: "range",
                         inclusive,
                         from: expression,
-                        to: readExpression(iteration, transform)
+                        to: readExpression()
                     });
-                    token = iteration.current;
 
                     if (token.kind !== "symbol") {
                         throw new ProcessorError("Expected comma or ']'", token.range);
@@ -146,9 +238,8 @@ export function transformer(tokens: Token[]) {
 
                 case "object": {
                     properties.push({
-                        key, expression: readExpression(iteration, transform)
+                        key, expression: readExpression()
                     });
-                    token = iteration.current;
 
                     state = "seperator";
                     continue;
@@ -165,38 +256,9 @@ export function transformer(tokens: Token[]) {
 
             token = iteration.next();
         }
-
+        
         throw new ProcessorError("Unclosed block", Range.between(begin, iteration.last));
     };
 
-    const transform = (token: Token): Node => {
-        if (token.kind !== "symbol") {
-            return token;
-        }
-
-        const begin = iteration.current;
-        let data: CompoundMetaData;
-
-        switch (token.value) {
-            case "(": data = readGroup(); break;
-            case "[": data = readArray(); break;
-            case "{": data = readBlock(); break;
-            default: return token;
-        }
-
-        return {
-            kind: "value", data,
-            range: Range.between(begin, iteration.last)
-        };
-    }
-
-    while (token = iteration.next()) {
-        try {
-            output.push(transform(token));
-        } catch (error) {
-            errors.push(error as ProcessorError);
-        }
-    }
-
-    return { output, errors };
+    return readExpression();
 }

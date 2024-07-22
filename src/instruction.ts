@@ -13,5 +13,4 @@ export type ThemeDefinition = {
     expression: ValueLiteralExpression & { data: BlockMetaData }
 }
 
-
 export type Instruction = Assignment | ThemeDefinition;

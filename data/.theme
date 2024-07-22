@@ -1,3 +1,4 @@
+~some comment
 let someColor: #ff0000;
 
 theme light: {

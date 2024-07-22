@@ -6,6 +6,7 @@ const breaks = [" ", "\t", "\n", "\r"];
 const symbols = ["(", ")", "{", "}", "[", "]", ",", ";", ":", "-"];
 const digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 const stringIndicators = ["'", '"'];
+const hexChars = ["a", "b", "c", "d", "e", "f", "A", "B", "C", "D", "E", "F", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
 type Representable<Kind extends string> = { kind: Kind; } & Ranged;
 
@@ -72,7 +73,6 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
             if (char === "\n") {
                 head.line++;
                 head.column = 0;
-
                 break;
             }
 
@@ -119,10 +119,32 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
         }
     };
 
+    const hex = () => {
+        while (head.index < input.length) {
+            const char = input[head.index];
+
+            if (!hexChars.includes(char)) {
+                output.push({
+                    kind: "value",
+                    data: {
+                        meta: "hex",
+                        value: input.substring(foot.index - 1, head.index)
+                    },
+                    range: Range.from(foot, head)
+                });
+
+                break;
+            }
+
+            head.index++;
+        }
+    };
+
     const capture = (char) => {
         switch (char) {
-            case "#": return comment;
+            case "~": return comment;
             case ".": return dot;
+            case "#": return hex;
         }
 
         if (digits.includes(char)) {
@@ -140,7 +162,9 @@ export function tokenizer(input: string): ProcessorResult<Token[]> {
     };
 
     const pushUncaptured = () => {
-        if (!captured) {
+        const length = head.index - foot.index - 1 ;
+
+        if (!captured && length > 0) {
             output.push({
                 kind: "none",
                 value: input.substring(foot.index, head.index - 1),

@@ -33,7 +33,7 @@ export function parser(tokens: Token[]): ProcessorResult<Instruction[]> {
     };
 
     //TODO: prevent transformer from reading extra tokens
-    const readExpression = (): Expression => { 
+    const readExpression = (): Expression => {
         const expressionTokens: Token[] = [];
 
         while (iteration.current) {
@@ -86,7 +86,7 @@ export function parser(tokens: Token[]): ProcessorResult<Instruction[]> {
 
         return {
             type: "theme", identifier,
-            expression: expression as ValueLiteralExpression & { data: BlockMetaData } //bad cast, cuz ts is dumb and doesn't allow circular generic types
+            expression: expression as ValueLiteralExpression<BlockMetaData>
         };
 
     };
@@ -126,9 +126,8 @@ export function parser(tokens: Token[]): ProcessorResult<Instruction[]> {
         expectSymbol(";");
 
         return {
-            type: "font", identifier,
-            expression: expression as ValueLiteralExpression & { data: BlockMetaData }, //bad cast again just to make ts happy
-            source
+            type: "font", identifier, source,
+            expression: expression as ValueLiteralExpression<BlockMetaData>
         };
     }
 

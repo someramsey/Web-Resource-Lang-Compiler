@@ -7,20 +7,16 @@ export type Assignment = {
     expression: Expression;
 };
 
-type BlockValueLiteralExpression = ValueLiteralExpression & {
-    data: BlockMetaData;
-};
-
 export type ThemeDefinition = {
     type: "theme";
     identifier: string;
-    expression: BlockValueLiteralExpression
+    expression: ValueLiteralExpression<BlockMetaData>;
 }
 
 export type FontDefinition = {
     type: "font";
     identifier: string;
-    expression: BlockValueLiteralExpression,
+    expression: ValueLiteralExpression<BlockMetaData>;
     source: string | null
 }
 

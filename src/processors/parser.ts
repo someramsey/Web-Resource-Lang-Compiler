@@ -2,7 +2,7 @@ import { Expression } from "../expression";
 import { Iteration } from "../iteration";
 import { ProcessorError, ProcessorResult } from "../processor";
 import { Token } from "./tokenizer";
-import { Node, transformer } from "./transformer";
+import { transformer } from "./transformer";
 
 type Assignment = {
     identifier: string;

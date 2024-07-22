@@ -8,6 +8,6 @@ export type ExpressionExtender = AcessorExpression | IndexerExpression;
 
 //Expressions
 export type ReferenceExpression = { kind: "reference"; name: string; extenders: ExpressionExtender[]; };
-export type ValueExpression = { kind: "value"; data: NodeMetaData; };
+export type ValueLiteralExpression = { kind: "literal"; data: NodeMetaData; };
 
-export type Expression = ReferenceExpression | ValueExpression;
+export type Expression = ReferenceExpression | ValueLiteralExpression;

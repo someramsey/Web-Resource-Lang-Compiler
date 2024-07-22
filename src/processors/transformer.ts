@@ -1,4 +1,4 @@
-import { Expression, ExpressionExtender, ValueExpression } from "../expression";
+import { Expression, ExpressionExtender, ValueLiteralExpression } from "../expression";
 import { Iteration } from "../iteration";
 import { ArrayItem, ArrayMetaData, BlockMetaData, CompoundMetaData, GroupMetaData, PrimeMetaData, Property } from "../meta";
 import { ProcessorError } from "../processor";
@@ -78,8 +78,8 @@ export function transformer(tokens: Token[]): Expression {
         const node = transform(token);
 
         if (node.kind == "value") {
-            const value: ValueExpression = {
-                kind: "value",
+            const value: ValueLiteralExpression = {
+                kind: "literal",
                 data: node.data
             };
 

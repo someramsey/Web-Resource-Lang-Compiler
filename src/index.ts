@@ -2,7 +2,7 @@ import fs from "fs";
 import { parser } from "./processors/parser";
 import { tokenizer } from "./processors/tokenizer";
 
-const data = fs.readFileSync("data/.theme", "utf-8");
+const data = fs.readFileSync("data/.sample", "utf-8");
 
 const tokenizationResult = tokenizer(data);
 console.log(tokenizationResult);

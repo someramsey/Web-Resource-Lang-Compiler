@@ -1,22 +1,33 @@
-let red: #ff0000;
+~some other comment
+let palette: {
+    blue: [#007bff, #0056b3, #004b9b, #03396c],
+    gray: [#f8f9fa, #e9ecef, #dee2e6, #ced4da],
+    white: [#ffffff...#f8f9fa^5] ~has 5 shades
+};
 
 theme light: {
-    primary: red,
+    primary: palette.blue[0],
     secondary: #00ff00,
+    background: palette.white[0],
+    text: palette.gray[3],
     button: {
-        active: #0000ff
+        active: palette.blue[2],
+        hover: palette.blue[1]
     }
 };
 
 theme dark: {
-    primary: red,
-    secondary: #00ff00,
+    primary: palette.blue[1],
+    secondary: palette.blue[0],
+    background: #000000,
+    text: #ffffff,
     button: {
-        active: #0000ff
+        active: palette.blue[2],
+        hover: palette.blue[1]
     }
 };
 
-font montserrat {
-    weight: [100...900];
-    style: all;
-} from 'url' as default;
+font montserrat: {
+    weight: [100...900], ~automatically has 9 weights
+    style: all,
+} from 'url';

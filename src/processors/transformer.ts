@@ -89,7 +89,7 @@ export function transformer(tokens: Token[]): Expression {
         throw new ProcessorError("Expected expression", node.range);
     };
 
-    
+
     const transform = (token: Token): Node => {
         if (token.kind !== "symbol") {
             return token;
@@ -104,7 +104,7 @@ export function transformer(tokens: Token[]): Expression {
             case "{": data = readBlock(); break;
             default: return token;
         }
-        
+
         return {
             kind: "value", data,
             range: Range.between(begin, iteration.last)
@@ -159,12 +159,37 @@ export function transformer(tokens: Token[]): Expression {
 
                     token = iteration.next();
 
-                    items.push({
-                        kind: "range",
-                        inclusive,
-                        from: expression,
-                        to: readExpression()
-                    });
+                    const endValueExpression = readExpression();
+
+                    if (token.kind !== "symbol") {
+                        throw new ProcessorError("Expected '^' , ']' or coma", token.range);
+                    }
+
+                    if (token.value === "^") {
+                        token = iteration.next();
+
+                        if (token.kind !== "value" || token.data.meta !== "number") {
+                            throw new ProcessorError("Expected number", token.range);
+                        }
+
+                        items.push({
+                            kind: "range",
+                            inclusive,
+                            from: expression,
+                            to: endValueExpression,
+                            steps: token.data.value
+                        });
+
+                        token = iteration.next();
+                    } else {
+                        items.push({
+                            kind: "range",
+                            inclusive,
+                            from: expression,
+                            to: endValueExpression,
+                            steps: "unset"
+                        });
+                    }
 
                     if (token.kind !== "symbol") {
                         throw new ProcessorError("Expected comma or ']'", token.range);

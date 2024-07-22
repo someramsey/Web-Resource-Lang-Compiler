@@ -1,7 +1,7 @@
 import { Expression } from "./expression";
 
 export type Property = { key: string; expression: Expression; }
-export type ArrayItem = { kind: "range", inclusive: boolean, from: Expression, to: Expression } | { kind: "single", expression: Expression };
+export type ArrayItem = { kind: "range", inclusive: boolean, from: Expression, to: Expression, steps: number | "unset" } | { kind: "single", expression: Expression };
 
 export type BlockMetaData = MetaData<"block", Property[]>;
 export type ArrayMetaData = MetaData<"array", ArrayItem[]>;

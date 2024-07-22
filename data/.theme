@@ -8,6 +8,7 @@ theme light: {
         a: #0000ff,
         nested: {
             color: #ff00ff
-        }
+        },
+        ranged: [#ff0000...#00ff00^5, #0000ff, #ff00ff...#0000ff]
     }
 };

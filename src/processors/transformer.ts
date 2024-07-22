@@ -8,14 +8,6 @@ import { Token, ValueToken } from "./tokenizer";
 export type NodeMetaData = PrimeMetaData | CompoundMetaData;
 export type Node = Token | ValueToken<CompoundMetaData>;
 
-export function isCompound(node: Node): node is ValueToken<CompoundMetaData> {
-    return node.kind === "value" && (
-        node.data.meta === "block" ||
-        node.data.meta === "array" ||
-        node.data.meta === "group"
-    );
-}
-
 export function transformer(tokens: Token[]): Expression {
     const iteration = new Iteration(tokens);
 

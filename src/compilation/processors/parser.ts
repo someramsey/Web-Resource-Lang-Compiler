@@ -4,9 +4,9 @@ import { Iteration } from "../iteration";
 import { BlockMetaData } from "../meta";
 import { ProcessorError, ProcessorResult } from "../processor";
 import { Token } from "./tokenizer";
-import { transformer } from "./transformer";
+import { transform } from "./transformer";
 
-export function parser(tokens: Token[]): ProcessorResult<Instruction[]> {
+export function parse(tokens: Token[]): ProcessorResult<Instruction[]> {
     const iteration = new Iteration(tokens);
 
     const output: Instruction[] = [];
@@ -38,7 +38,7 @@ export function parser(tokens: Token[]): ProcessorResult<Instruction[]> {
 
         while (iteration.current) {
             if (iteration.current.kind === "symbol" && iteration.current.value === ";") {
-                return transformer(expressionTokens);
+                return transform(expressionTokens);
             }
 
             expressionTokens.push(iteration.current);

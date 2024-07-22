@@ -15,7 +15,7 @@ export type ValueToken<T extends MetaData> = { data: T } & Representable<"value"
 
 export type Token = BasicToken | ValueToken<PrimeMetaData>;
 
-export function tokenizer(input: string): ProcessorResult<Token[]> {
+export function tokenize(input: string): ProcessorResult<Token[]> {
     const output: Token[] = [];
     const errors: ProcessorError[] = []
 

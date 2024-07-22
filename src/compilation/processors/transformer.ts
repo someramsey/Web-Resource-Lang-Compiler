@@ -8,7 +8,7 @@ import { Token, ValueToken } from "./tokenizer";
 export type NodeMetaData = PrimeMetaData | CompoundMetaData;
 export type Node = Token | ValueToken<CompoundMetaData>;
 
-export function transformer(tokens: Token[]): Expression {
+export function transform(tokens: Token[]): Expression {
     const iteration = new Iteration(tokens);
 
     let token: Token = iteration.next();

@@ -15,6 +15,6 @@ export interface ValueLiteralExpression<T extends NodeMetaData<Expression>> {
 
 
 export type UnresolvedExpression = ReferenceExpression | ValueLiteralExpression<NodeMetaData<UnresolvedExpression>>;
-export type ResolvedExpression = ValueLiteralExpression<NodeMetaData<ResolvedExpression>>
+export type ResolvedExpression = { data: NodeMetaData<ResolvedExpression> };
 
 export type Expression = UnresolvedExpression | ResolvedExpression;

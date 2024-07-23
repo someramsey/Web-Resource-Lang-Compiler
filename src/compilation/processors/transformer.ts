@@ -1,11 +1,11 @@
-import { UnresolvedExpression, ExpressionExtender, ValueLiteralExpression } from "../expression";
+import { Expression, ExpressionExtender, UnresolvedExpression, ValueLiteralExpression } from "../expression";
 import { Iteration } from "../iteration";
 import { ArrayItem, ArrayMetaData, BlockMetaData, CompoundMetaData, GroupMetaData, PrimeMetaData, Property } from "../meta";
 import { ProcessorError } from "../processor";
 import { Range } from "../range";
 import { Token, ValueToken } from "./tokenizer";
 
-export type NodeMetaData<T> = PrimeMetaData | CompoundMetaData<T>;
+export type NodeMetaData<T extends Expression> = PrimeMetaData | CompoundMetaData<T>;
 export type Node = Token | ValueToken<CompoundMetaData<UnresolvedExpression>>;
 
 export function transform(tokens: Token[]): UnresolvedExpression {

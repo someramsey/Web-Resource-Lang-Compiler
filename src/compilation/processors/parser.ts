@@ -1,4 +1,4 @@
-import { Expression, ValueLiteralExpression } from "../expression";
+import { UnresolvedExpression, ValueLiteralExpression } from "../expression";
 import { Assignment, FontDefinition, Instruction, ThemeDefinition } from "../instruction";
 import { Iteration } from "../iteration";
 import { BlockMetaData } from "../meta";
@@ -6,10 +6,10 @@ import { ProcessorError, ProcessorResult } from "../processor";
 import { Token } from "./tokenizer";
 import { transform } from "./transformer";
 
-export function parse(tokens: Token[]): ProcessorResult<Instruction[]> {
+export function parse(tokens: Token[]): ProcessorResult<Instruction<UnresolvedExpression>[]> {
     const iteration = new Iteration(tokens);
 
-    const output: Instruction[] = [];
+    const output: Instruction<UnresolvedExpression>[] = [];
     const errors: ProcessorError[] = [];
 
     const expectIdentifier = (): string => {
@@ -33,7 +33,7 @@ export function parse(tokens: Token[]): ProcessorResult<Instruction[]> {
     };
 
     //TODO: prevent transformer from reading extra tokens
-    const readExpression = (): Expression => {
+    const readExpression = (): UnresolvedExpression => {
         const expressionTokens: Token[] = [];
 
         while (iteration.current) {
@@ -49,7 +49,7 @@ export function parse(tokens: Token[]): ProcessorResult<Instruction[]> {
     }
 
     //instructions
-    const parseAssignment = (): Assignment => {
+    const parseAssignment = (): Assignment<UnresolvedExpression> => {
         next();
         const identifier = expectIdentifier();
 
@@ -64,7 +64,7 @@ export function parse(tokens: Token[]): ProcessorResult<Instruction[]> {
         return { type: "assignment", identifier, expression };
     };
 
-    const parseThemeDefinition = (): ThemeDefinition => {
+    const parseThemeDefinition = (): ThemeDefinition<UnresolvedExpression> => {
         next();
         const identifier = expectIdentifier();
 
@@ -86,12 +86,12 @@ export function parse(tokens: Token[]): ProcessorResult<Instruction[]> {
 
         return {
             type: "theme", identifier,
-            expression: expression as ValueLiteralExpression<BlockMetaData>
+            expression: expression as ValueLiteralExpression<BlockMetaData<UnresolvedExpression>>
         };
 
     };
 
-    const parseFontDefinition = (): FontDefinition => {
+    const parseFontDefinition = (): FontDefinition<UnresolvedExpression> => {
         next();
         const identifier = expectIdentifier();
 
@@ -127,11 +127,11 @@ export function parse(tokens: Token[]): ProcessorResult<Instruction[]> {
 
         return {
             type: "font", identifier, source,
-            expression: expression as ValueLiteralExpression<BlockMetaData>
+            expression: expression as ValueLiteralExpression<BlockMetaData<UnresolvedExpression>>
         };
     }
 
-    const parse = (): Instruction => {
+    const parse = (): Instruction<UnresolvedExpression> => {
         if (iteration.current.kind !== "none") {
             throw new ProcessorError("Unexpected token, expected a statement", iteration.current.range);
         }

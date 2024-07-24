@@ -71,7 +71,8 @@ export function transform(tokens: Token[]): UnresolvedExpression {
         if (node.kind == "value") {
             const value: ValueLiteralExpression<NodeMetaData<UnresolvedExpression>> = {
                 kind: "literal",
-                data: node.data
+                data: node.data,
+                range: node.range
             };
 
             token = iteration.next();
@@ -81,7 +82,8 @@ export function transform(tokens: Token[]): UnresolvedExpression {
             return {
                 kind: "reference",
                 name: node.value,
-                extenders: readExpressionExtenders()
+                extenders: readExpressionExtenders(),
+                range: node.range
             };
         }
 

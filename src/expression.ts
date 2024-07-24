@@ -1,4 +1,5 @@
 import { NodeMetaData } from "./meta";
+import { Range } from "./range";
 
 //Expression extenders
 export type AcessorExpression = { kind: "acessor"; name: string; };
@@ -11,11 +12,13 @@ export type ReferenceExpression = {
     kind: "reference";
     name: string;
     extenders: ExpressionExtender[];
+    range: Range;
 };
 
 export interface ValueLiteralExpression<T extends NodeMetaData<Expression>> {
     kind: "literal";
     data: T;
+    range: Range;
 }
 
 export type ResolvedExpression = { data: NodeMetaData<ResolvedExpression> };

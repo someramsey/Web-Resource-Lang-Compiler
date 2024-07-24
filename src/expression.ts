@@ -1,4 +1,4 @@
-import { NodeMetaData } from "./core/processors/transformer";
+import { NodeMetaData } from "./meta";
 
 //Expression extenders
 export type AcessorExpression = { kind: "acessor"; name: string; };

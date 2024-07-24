@@ -11,8 +11,9 @@ export type StringMetaData = MetaData<"string", string>;
 export type NumberMetaData = MetaData<"number", number>;
 export type HexMetaData = MetaData<"hex", string>;
 
-export type CompoundMetaData<T extends Expression> = BlockMetaData<T> | ArrayMetaData<T> | GroupMetaData<T>;
 export type PrimeMetaData = StringMetaData | NumberMetaData | HexMetaData;
+export type CompoundMetaData<T extends Expression> = BlockMetaData<T> | ArrayMetaData<T> | GroupMetaData<T>;
+export type NodeMetaData<T extends Expression> = PrimeMetaData | CompoundMetaData<T>;
 
 export type MetaData<Meta extends string = string, Value = any> = {
     meta: Meta;

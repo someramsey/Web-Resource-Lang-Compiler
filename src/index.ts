@@ -1,7 +1,7 @@
 import fs from "fs";
-import { compile } from "./compilation/compiler";
-import { Instruction } from "./compilation/instruction";
-import { UnresolvedExpression } from "./compilation/expression";
+import { compile } from "./core/compiler";
+import { Instruction } from "./instruction";
+import { UnresolvedExpression } from "./expression";
 
 const data = fs.readFileSync("data/.sample", "utf-8");
 const result = compile(data);

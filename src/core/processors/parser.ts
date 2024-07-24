@@ -1,7 +1,7 @@
-import { UnresolvedExpression, ValueLiteralExpression } from "../expression";
-import { Assignment, FontDefinition, Instruction, ThemeDefinition } from "../instruction";
-import { Iteration } from "../iteration";
-import { BlockMetaData } from "../meta";
+import { UnresolvedExpression, ValueLiteralExpression } from "../../expression";
+import { Assignment, FontDefinition, Instruction, ThemeDefinition } from "../../instruction";
+import { Iteration } from "../../iteration";
+import { BlockMetaData } from "../../meta";
 import { ProcessorError, ProcessorResult } from "../processor";
 import { Token } from "./tokenizer";
 import { transform } from "./transformer";

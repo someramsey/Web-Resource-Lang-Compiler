@@ -1,4 +1,4 @@
-import { Token } from "./processors/tokenizer";
+import { Token } from "./core/processors/tokenizer";
 
 export type Position = {
     column: number;

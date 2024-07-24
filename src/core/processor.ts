@@ -1,4 +1,4 @@
-import { Range } from "./range";
+import { Range } from "../range";
 
 export class ProcessorError extends Error {
     public range: Range;

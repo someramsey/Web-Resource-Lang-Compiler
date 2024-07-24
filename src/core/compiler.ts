@@ -1,5 +1,5 @@
-import { UnresolvedExpression } from "./expression";
-import { Instruction } from "./instruction";
+import { UnresolvedExpression } from "../expression";
+import { Instruction } from "../instruction";
 import { ProcessorResult } from "./processor";
 import { parse } from "./processors/parser";
 import { tokenize } from "./processors/tokenizer";

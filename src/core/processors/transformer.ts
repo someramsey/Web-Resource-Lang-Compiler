@@ -1,8 +1,8 @@
-import { Expression, ExpressionExtender, UnresolvedExpression, ValueLiteralExpression } from "../expression";
-import { Iteration } from "../iteration";
-import { ArrayItem, ArrayMetaData, BlockMetaData, CompoundMetaData, GroupMetaData, PrimeMetaData, Property } from "../meta";
+import { Expression, ExpressionExtender, UnresolvedExpression, ValueLiteralExpression } from "../../expression";
+import { Iteration } from "../../iteration";
+import { ArrayItem, ArrayMetaData, BlockMetaData, CompoundMetaData, GroupMetaData, PrimeMetaData, Property } from "../../meta";
 import { ProcessorError } from "../processor";
-import { Range } from "../range";
+import { Range } from "../../range";
 import { Token, ValueToken } from "./tokenizer";
 
 export type NodeMetaData<T extends Expression> = PrimeMetaData | CompoundMetaData<T>;

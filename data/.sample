@@ -31,3 +31,8 @@ font montserrat: {
     weight: [100...900], ~automatically has 9 weights
     style: all,
 } from 'url';
+
+defaults: {
+    font: montserrat,
+    theme: light
+};

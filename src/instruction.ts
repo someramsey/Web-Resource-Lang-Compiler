@@ -1,4 +1,4 @@
-import { Expression, UnresolvedExpression, ValueLiteralExpression } from "./expression";
+import { Expression, ValueLiteralExpression } from "./expression";
 import { BlockMetaData } from "./meta";
 
 export type Assignment<T extends Expression> = {
@@ -20,5 +20,5 @@ export type FontDefinition<T extends Expression> = {
     source: string | null
 }
 
-export type Instruction<T extends Expression> = Assignment<T> | ThemeDefinition<T> | FontDefinition<T>;
+export type Instruction<T extends Expression = Expression> = Assignment<T> | ThemeDefinition<T> | FontDefinition<T>;
 

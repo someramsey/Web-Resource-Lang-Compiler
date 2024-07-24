@@ -32,7 +32,10 @@ font montserrat: {
     style: all,
 } from 'url';
 
-defaults: {
-    font: montserrat,
-    theme: light
-};
+
+
+
+~ defaults: {
+~     font: montserrat,
+~     theme: light
+~ };

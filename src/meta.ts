@@ -1,19 +1,19 @@
 import { Expression } from "./expression";
 
-export type Property<T extends Expression> = { key: string; expression: T; }
-export type ArrayItem<T extends Expression> = { kind: "range", inclusive: boolean, from: T, to: T, steps: number | "unset" } | { kind: "single", expression: T };
+export type Property = { key: string; expression: Expression; }
+export type ArrayItem = { kind: "range", inclusive: boolean, from: Expression, to: Expression, steps: number | "unset" } | { kind: "single", expression: Expression };
 
-export type BlockMetaData<T extends Expression> = MetaData<"block", Property<T>[]>;
-export type ArrayMetaData<T extends Expression> = MetaData<"array", ArrayItem<T>[]>;
-export type GroupMetaData<T extends Expression> = MetaData<"group", T>;
+export type BlockMetaData = MetaData<"block", Property[]>;
+export type ArrayMetaData = MetaData<"array", ArrayItem[]>;
+export type GroupMetaData = MetaData<"group", Expression>;
 
 export type StringMetaData = MetaData<"string", string>;
 export type NumberMetaData = MetaData<"number", number>;
 export type HexMetaData = MetaData<"hex", string>;
 
 export type PrimeMetaData = StringMetaData | NumberMetaData | HexMetaData;
-export type CompoundMetaData<T extends Expression> = BlockMetaData<T> | ArrayMetaData<T> | GroupMetaData<T>;
-export type NodeMetaData<T extends Expression> = PrimeMetaData | CompoundMetaData<T>;
+export type CompoundMetaData = BlockMetaData | ArrayMetaData | GroupMetaData;
+export type NodeMetaData = PrimeMetaData | CompoundMetaData;
 
 export type MetaData<Meta extends string = string, Value = any> = {
     meta: Meta;

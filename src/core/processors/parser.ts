@@ -1,15 +1,15 @@
-import { UnresolvedExpression, ValueLiteralExpression } from "../../expression";
-import { Assignment, FontDefinition, Instruction, ThemeDefinition } from "../../instruction";
+import { Expression, ValueLiteralExpression } from "../../expression";
+import { ThemeDefinition, Assignment, Directive } from "../../instruction";
 import { Iteration } from "../../iteration";
 import { BlockMetaData } from "../../meta";
 import { ProcessorError, ProcessorResult } from "../processor";
 import { Token } from "./tokenizer";
 import { transform } from "./transformer";
 
-export function parse(tokens: Token[]): ProcessorResult<Instruction<UnresolvedExpression>[]> {
+export function parse(tokens: Token[]): ProcessorResult<Directive[]> {
     const iteration = new Iteration(tokens);
 
-    const output: Instruction<UnresolvedExpression>[] = [];
+    const output: Expressive<Expression>[] = [];
     const errors: ProcessorError[] = [];
 
     const expectIdentifier = (): string => {
@@ -33,7 +33,7 @@ export function parse(tokens: Token[]): ProcessorResult<Instruction<UnresolvedEx
     };
 
     //TODO: prevent transformer from reading extra tokens
-    const readExpression = (): UnresolvedExpression => {
+    const readExpression = (): Expression => {
         const expressionTokens: Token[] = [];
 
         while (iteration.current) {
@@ -49,7 +49,7 @@ export function parse(tokens: Token[]): ProcessorResult<Instruction<UnresolvedEx
     }
 
     //instructions
-    const parseAssignment = (): Assignment<UnresolvedExpression> => {
+    const parseAssignment = (): Assignment<Expression> => {
         next();
         const identifier = expectIdentifier();
 
@@ -64,7 +64,7 @@ export function parse(tokens: Token[]): ProcessorResult<Instruction<UnresolvedEx
         return { type: "assignment", identifier, expression };
     };
 
-    const parseThemeDefinition = (): ThemeDefinition<UnresolvedExpression> => {
+    const parseThemeDefinition = (): ThemeDefinition<Expression> => {
         next();
         const identifier = expectIdentifier();
 
@@ -74,11 +74,7 @@ export function parse(tokens: Token[]): ProcessorResult<Instruction<UnresolvedEx
         next();
         const expression = readExpression();
 
-        if (expression.kind != "literal") {
-            throw new ProcessorError("Expected a block literal", iteration.current.range);
-        }
-
-        if (expression.data.meta != "block") {
+        if (expression.kind != "literal" || expression.data.meta != "block") {
             throw new ProcessorError("Expected a block literal", iteration.current.range);
         }
 
@@ -86,12 +82,12 @@ export function parse(tokens: Token[]): ProcessorResult<Instruction<UnresolvedEx
 
         return {
             type: "theme", identifier,
-            expression: expression as ValueLiteralExpression<BlockMetaData<UnresolvedExpression>>
+            expression: expression as ValueLiteralExpression<BlockMetaData<Expression>>
         };
 
     };
 
-    const parseFontDefinition = (): FontDefinition<UnresolvedExpression> => {
+    const parseFontDefinition = (): UnresolvedFontDefinition => {
         next();
         const identifier = expectIdentifier();
 
@@ -101,19 +97,26 @@ export function parse(tokens: Token[]): ProcessorResult<Instruction<UnresolvedEx
         next();
         const expression = readExpression();
 
-        if (expression.kind != "literal") {
+        if (expression.kind != "literal" || expression.data.meta != "block") {
             throw new ProcessorError("Expected a block literal", iteration.current.range);
         }
 
-        if (expression.data.meta != "block") {
-            throw new ProcessorError("Expected a block literal", iteration.current.range);
+        let fontWeight: number[] | null = null;
+        let fontStyle: "normal" | "italic" | "oblique" | null = null;
+        
+        for(const property of expression.data.value) {
+            if(property.key == "weights") {
+                
+            } else if(property.key == "style") {
+
+            }
         }
 
         let source: string | null = null;
         const current = iteration.current; //to prevent typescript from trying to overlap types after calling next
 
         if (current.kind === "none" && current.value === "from") {
-            next();
+            next(); //This here cuz readExpression() already has an extra offset
 
             if (iteration.current.kind !== "value" || iteration.current.data.meta !== "string") {
                 throw new ProcessorError("Expected a string literal", iteration.current.range);
@@ -125,13 +128,17 @@ export function parse(tokens: Token[]): ProcessorResult<Instruction<UnresolvedEx
 
         expectSymbol(";");
 
+
         return {
             type: "font", identifier, source,
-            expression: expression as ValueLiteralExpression<BlockMetaData<UnresolvedExpression>>
+            configuration: {
+                weights: fontWeight,
+                style: fontStyle
+            }
         };
     }
 
-    const parse = (): Instruction<UnresolvedExpression> => {
+    const parse = (): Expressive<Expression> => {
         if (iteration.current.kind !== "none") {
             throw new ProcessorError("Unexpected token, expected a statement", iteration.current.range);
         }

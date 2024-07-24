@@ -1,6 +1,8 @@
 ~some other comment
+let a: { b: "something non-color" };
+
 let palette: {
-    blue: [#007bff, #0056b3, #004b9b, #03396c],
+    blue: [#007bff, #0056b3, #004b9b, a.b],
     gray: [#f8f9fa, #e9ecef, #dee2e6, #ced4da],
     white: [#ffffff...#f8f9fa^5] ~has 5 shades
 };
@@ -28,7 +30,7 @@ theme dark: {
 };
 
 font montserrat: {
-    weight: [100...900], ~automatically has 9 weights
+    weights: [100...900], ~automatically has 9 weights
     style: all,
 } from 'url';
 

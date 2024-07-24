@@ -1,13 +1,13 @@
-import { ExpressionExtender, UnresolvedExpression, ValueLiteralExpression } from "../../expression";
+import { ExpressionExtender, Expression, ValueLiteralExpression } from "../../expression";
 import { Iteration } from "../../iteration";
 import { ArrayItem, ArrayMetaData, BlockMetaData, CompoundMetaData, GroupMetaData, NodeMetaData, Property } from "../../meta";
 import { Range } from "../../range";
 import { ProcessorError } from "../processor";
 import { Token, ValueToken } from "./tokenizer";
 
-export type Node = Token | ValueToken<CompoundMetaData<UnresolvedExpression>>;
+export type Node = Token | ValueToken<CompoundMetaData<Expression>>;
 
-export function transform(tokens: Token[]): UnresolvedExpression {
+export function transform(tokens: Token[]): Expression {
     const iteration = new Iteration(tokens);
 
     let token: Token = iteration.next();
@@ -65,11 +65,11 @@ export function transform(tokens: Token[]): UnresolvedExpression {
         return extenders;
     }
 
-    const readExpression = (): UnresolvedExpression => {
+    const readExpression = (): Expression => {
         const node = transform(token);
 
         if (node.kind == "value") {
-            const value: ValueLiteralExpression<NodeMetaData<UnresolvedExpression>> = {
+            const value: ValueLiteralExpression<NodeMetaData<Expression>> = {
                 kind: "literal",
                 data: node.data,
                 range: node.range
@@ -97,7 +97,7 @@ export function transform(tokens: Token[]): UnresolvedExpression {
         }
 
         const begin = iteration.current;
-        let data: CompoundMetaData<UnresolvedExpression>;
+        let data: CompoundMetaData<Expression>;
 
         switch (token.value) {
             case "(": data = readGroup(); break;
@@ -112,7 +112,7 @@ export function transform(tokens: Token[]): UnresolvedExpression {
         };
     };
 
-    const readGroup = (): GroupMetaData<UnresolvedExpression> => {
+    const readGroup = (): GroupMetaData<Expression> => {
         token = iteration.next();
 
         const expression = readExpression();
@@ -127,8 +127,8 @@ export function transform(tokens: Token[]): UnresolvedExpression {
         };
     };
 
-    const readArray = (): ArrayMetaData<UnresolvedExpression> => {
-        const items: ArrayItem<UnresolvedExpression>[] = [];
+    const readArray = (): ArrayMetaData<Expression> => {
+        const items: ArrayItem<Expression>[] = [];
         const begin = iteration.current;
 
         while (token = iteration.next()) {
@@ -216,8 +216,8 @@ export function transform(tokens: Token[]): UnresolvedExpression {
         throw new ProcessorError("Unclosed array", Range.between(begin, iteration.last));
     };
 
-    const readBlock = (): BlockMetaData<UnresolvedExpression> => {
-        const properties: Property<UnresolvedExpression>[] = [];
+    const readBlock = (): BlockMetaData<Expression> => {
+        const properties: Property<Expression>[] = [];
         const begin = iteration.current;
 
         let key = "";

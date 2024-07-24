@@ -1,22 +1,18 @@
-import { Expression, ReferenceExpression, ResolvedExpression, UnresolvedExpression, ValueLiteralExpression } from "../../expression";
+import { ReferenceExpression, ResolvedExpression, UnresolvedExpression, ValueLiteralExpression } from "../../expression";
 import { Instruction } from "../../instruction";
-import { ArrayItem, ArrayMetaData, BlockMetaData, CompoundMetaData, GroupMetaData, NodeMetaData } from "../../meta";
+import { ArrayItem, ArrayMetaData, BlockMetaData, GroupMetaData, NodeMetaData } from "../../meta";
 import { ProcessorError, ProcessorResult } from "../processor";
-
-
-
-
 
 export function resolve(instructions: Instruction<UnresolvedExpression>[]): ProcessorResult<Instruction<ResolvedExpression>[]> {
     const output: Instruction<ResolvedExpression>[] = [];
     const errors: ProcessorError[] = [];
 
-    const resolveExpression = (expression: UnresolvedExpression, premature: boolean): ResolvedExpression => {
+    const resolveExpression = (expression: UnresolvedExpression): ResolvedExpression => {
         const unwrapMetaData = (data: NodeMetaData<UnresolvedExpression>): NodeMetaData<ResolvedExpression> => {
             const resolveGroup = (data: GroupMetaData<UnresolvedExpression>): GroupMetaData<ResolvedExpression> => {
                 return {
                     meta: "group",
-                    value: resolveExpression(data.value, premature)
+                    value: resolveExpression(data.value)
                 };
             };
 
@@ -27,13 +23,13 @@ export function resolve(instructions: Instruction<UnresolvedExpression>[]): Proc
                         if (item.kind == "single") {
                             return {
                                 ...item,
-                                expression: resolveExpression(item.expression, premature)
+                                expression: resolveExpression(item.expression)
                             }
                         } else {
                             return {
                                 ...item,
-                                from: resolveExpression(item.from, premature),
-                                to: resolveExpression(item.to, premature)
+                                from: resolveExpression(item.from),
+                                to: resolveExpression(item.to)
                             }
                         }
                     })
@@ -45,7 +41,7 @@ export function resolve(instructions: Instruction<UnresolvedExpression>[]): Proc
                     meta: "block",
                     value: data.value.map(property => ({
                         key: property.key,
-                        expression: resolveExpression(property.expression, premature)
+                        expression: resolveExpression(property.expression)
                     }))
                 }
             }
@@ -60,28 +56,45 @@ export function resolve(instructions: Instruction<UnresolvedExpression>[]): Proc
         }
 
         const resolveReference = (reference: ReferenceExpression): NodeMetaData<ResolvedExpression> => {
-            instructions.forEach(instruction => {
-                if (instruction.identifier == reference.name) {
-                    const expression = resolveExpression(instruction.expression, false);
+            const lookup = (name: string): ValueLiteralExpression<NodeMetaData<UnresolvedExpression>> => {
+                for (const instruction of instructions) {
+                    if (instruction.identifier == name) {
+                        if (instruction.expression.kind == "literal") {
+                            return instruction.expression;
+                        }
 
-
-
-
-
-
-
-
+                        return lookup(instruction.expression.name);
+                    }
                 }
-            })
+
+                throw new ProcessorError(`Reference could not be found: ${name}`, reference.range);
+            };
+
+            let target = lookup(reference.name);
+
+            for (const extender of reference.extenders) {
+                switch (extender.kind) {
+                    case "acessor": {
+                        if(target.data.meta !== "block") {
+                            throw new ProcessorError(`Cannot use acessor on non-block data`, reference.range);
+                        }
+
+                        for(const property of target.data.value) {
+                            if(property.key == extender.name) {
+                                //TODO: trace up until the end
+                                break;
+                            }
+                        }
+
+                        throw new ProcessorError(`Property '${extender.name}' does not exist on '${reference.name}'`, reference.range);
+                    }
+                }
+            }
         }
 
-
-
-
-        if (expression.kind == "literal") {
-            return { data: unwrapMetaData(expression.data) };
-        } else {
-            return { data: resolveReference(expression) };
+        switch (expression.kind) {
+            case "literal": return { data: unwrapMetaData(expression.data) };
+            case "reference": return { data: resolveReference(expression) };
         }
     }
 

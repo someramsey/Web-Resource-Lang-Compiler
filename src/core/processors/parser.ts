@@ -1,15 +1,14 @@
-import { Expression, ValueLiteralExpression } from "../../expression";
-import { ThemeDefinition, Assignment, Directive } from "../../instruction";
+import { Expression } from "../../expression";
+import { Assignment, FontDefinition, ThemeDefinition, UnresolvedDefinition } from "../../instruction";
 import { Iteration } from "../../iteration";
-import { BlockMetaData } from "../../meta";
 import { ProcessorError, ProcessorResult } from "../processor";
 import { Token } from "./tokenizer";
 import { transform } from "./transformer";
 
-export function parse(tokens: Token[]): ProcessorResult<Directive[]> {
+export function parse(tokens: Token[]): ProcessorResult<UnresolvedDefinition[]> {
     const iteration = new Iteration(tokens);
 
-    const output: Expressive<Expression>[] = [];
+    const output: UnresolvedDefinition[] = [];
     const errors: ProcessorError[] = [];
 
     const expectIdentifier = (): string => {
@@ -48,8 +47,9 @@ export function parse(tokens: Token[]): ProcessorResult<Directive[]> {
         throw new ProcessorError("Unexpected end of file", iteration.last.range);
     }
 
+
     //instructions
-    const parseAssignment = (): Assignment<Expression> => {
+    const parseAssignment = (): Assignment => {
         next();
         const identifier = expectIdentifier();
 
@@ -61,7 +61,11 @@ export function parse(tokens: Token[]): ProcessorResult<Directive[]> {
 
         expectSymbol(";");
 
-        return { type: "assignment", identifier, expression };
+        return {
+            type: "assignment",
+            identifier,
+            body: expression
+        };
     };
 
     const parseThemeDefinition = (): ThemeDefinition<Expression> => {
@@ -81,13 +85,14 @@ export function parse(tokens: Token[]): ProcessorResult<Directive[]> {
         expectSymbol(";");
 
         return {
-            type: "theme", identifier,
-            expression: expression as ValueLiteralExpression<BlockMetaData<Expression>>
+            type: "theme", 
+            identifier,
+            body: expression
         };
 
     };
 
-    const parseFontDefinition = (): UnresolvedFontDefinition => {
+    const parseFontDefinition = (): FontDefinition<Expression> => {
         next();
         const identifier = expectIdentifier();
 
@@ -95,21 +100,10 @@ export function parse(tokens: Token[]): ProcessorResult<Directive[]> {
         expectSymbol(":");
 
         next();
-        const expression = readExpression();
+        const body = readExpression();
 
-        if (expression.kind != "literal" || expression.data.meta != "block") {
+        if (body.kind != "literal" || body.data.meta != "block") {
             throw new ProcessorError("Expected a block literal", iteration.current.range);
-        }
-
-        let fontWeight: number[] | null = null;
-        let fontStyle: "normal" | "italic" | "oblique" | null = null;
-        
-        for(const property of expression.data.value) {
-            if(property.key == "weights") {
-                
-            } else if(property.key == "style") {
-
-            }
         }
 
         let source: string | null = null;
@@ -130,15 +124,14 @@ export function parse(tokens: Token[]): ProcessorResult<Directive[]> {
 
 
         return {
-            type: "font", identifier, source,
-            configuration: {
-                weights: fontWeight,
-                style: fontStyle
-            }
+            type: "font", 
+            identifier, 
+            source,
+            body
         };
     }
 
-    const parse = (): Expressive<Expression> => {
+    const parse = (): UnresolvedDefinition => {
         if (iteration.current.kind !== "none") {
             throw new ProcessorError("Unexpected token, expected a statement", iteration.current.range);
         }

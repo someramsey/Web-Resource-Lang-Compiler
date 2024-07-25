@@ -15,7 +15,7 @@ export type ReferenceExpression = {
     range: Range;
 };
 
-export interface ValueLiteralExpression<T extends NodeMetaData> {
+export interface ValueLiteralExpression<T extends NodeMetaData = NodeMetaData> {
     kind: "literal";
     data: T;
     range: Range;

@@ -5,7 +5,7 @@ import { Range } from "../../range";
 import { ProcessorError } from "../processor";
 import { Token, ValueToken } from "./tokenizer";
 
-export type Node = Token | ValueToken<CompoundMetaData<Expression>>;
+export type Node = Token | ValueToken<CompoundMetaData>;
 
 export function transform(tokens: Token[]): Expression {
     const iteration = new Iteration(tokens);
@@ -69,7 +69,7 @@ export function transform(tokens: Token[]): Expression {
         const node = transform(token);
 
         if (node.kind == "value") {
-            const value: ValueLiteralExpression<NodeMetaData<Expression>> = {
+            const value: ValueLiteralExpression<NodeMetaData> = {
                 kind: "literal",
                 data: node.data,
                 range: node.range
@@ -97,7 +97,7 @@ export function transform(tokens: Token[]): Expression {
         }
 
         const begin = iteration.current;
-        let data: CompoundMetaData<Expression>;
+        let data: CompoundMetaData;
 
         switch (token.value) {
             case "(": data = readGroup(); break;
@@ -112,7 +112,7 @@ export function transform(tokens: Token[]): Expression {
         };
     };
 
-    const readGroup = (): GroupMetaData<Expression> => {
+    const readGroup = (): GroupMetaData => {
         token = iteration.next();
 
         const expression = readExpression();
@@ -127,8 +127,8 @@ export function transform(tokens: Token[]): Expression {
         };
     };
 
-    const readArray = (): ArrayMetaData<Expression> => {
-        const items: ArrayItem<Expression>[] = [];
+    const readArray = (): ArrayMetaData => {
+        const items: ArrayItem[] = [];
         const begin = iteration.current;
 
         while (token = iteration.next()) {
@@ -216,8 +216,8 @@ export function transform(tokens: Token[]): Expression {
         throw new ProcessorError("Unclosed array", Range.between(begin, iteration.last));
     };
 
-    const readBlock = (): BlockMetaData<Expression> => {
-        const properties: Property<Expression>[] = [];
+    const readBlock = (): BlockMetaData => {
+        const properties: Property[] = [];
         const begin = iteration.current;
 
         let key = "";

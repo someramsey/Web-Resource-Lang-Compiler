@@ -5,4 +5,4 @@ const data = fs.readFileSync("data/.sample", "utf-8");
 const result = compile(data);
 
 console.log(result);
-debugger;
+while (true);

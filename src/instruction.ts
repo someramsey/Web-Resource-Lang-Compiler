@@ -1,31 +1,31 @@
+import { ResolvedBlockData } from "./core/processors/resolver";
 import { Expression } from "./expression";
-import { PrimeMetaData } from "./meta";
 
 export type Assignment = {
     type: "assignment";
     identifier: string;
-    data: Expression
+    body: Expression
 };
 
+type Resolvable<T> = T | Expression;
 
-type ThemeDefinitionBlock = { [key: string]: PrimeMetaData | ThemeDefinitionBlock }
-
-export type ThemeDefinition = {
+export type ThemeDefinition<TData extends Resolvable<ResolvedBlockData>> = {
     type: "theme";
     identifier: string;
-} & Resolvable<ThemeDefinitionBlock>;
-
-export type FontDefinition = {
+    body: TData;
+};
+export type FontDefinition<TData extends Resolvable<FontDefinitionData>> = {
     type: "font";
     identifier: string;
     source: string | null;
-} & Resolvable<{
+    body: TData;
+};
+
+export type FontDefinitionData = {
     weights: number[] | null;
     style: "normal" | "italic" | "oblique" | null;
-}>;
+};
 
-export type Resolvable<TData> = { data: TData | Expression; }
-export type Resolved<T extends Resolvable<any>> = T extends Resolvable<infer TData> ? TData : never;
 
-export type Directive = Assignment | ThemeDefinition | FontDefinition;
-export type Definition = Resolved<(ThemeDefinition | FontDefinition)>;
+export type Definition = ThemeDefinition<ResolvedBlockData> | FontDefinition<FontDefinitionData>;
+export type UnresolvedDefinition = ThemeDefinition<Expression> | FontDefinition<Expression> | Assignment;

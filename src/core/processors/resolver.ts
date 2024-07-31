@@ -1,9 +1,23 @@
-import { Range } from "../../range";
-import { ParseResult } from "./parser";
 import { Definition, UnresolvedDefinition } from "../../definition";
 import { Expression, ValueLiteralExpression } from "../../expression";
-import { Interpolation, ArrayMetaData, BlockMetaData, GroupMetaData, NodeMetaData, UnresolvedArrayMetaData, UnresolvedBlockMetaData, UnresolvedGroupMetaData } from "../../meta";
+import { ArrayMetaData, BlockMetaData, GroupMetaData, Interpolation, NodeMetaData, UnresolvedArrayMetaData, UnresolvedBlockMetaData, UnresolvedGroupMetaData } from "../../meta";
 import { ProcessorError, ProcessorResult } from "../processor";
+import { ParseResult } from "./parser";
+
+function hexToRgb(hex: string): { r: number, g: number, b: number } {
+    const data = hex.substring(1);
+    const bigint = parseInt(data, 16);
+
+    return {
+        r: (bigint >> 16) & 255,
+        g: (bigint >> 8) & 255,
+        b: bigint & 255
+    }
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+    return `#${r.toString(16)}${g.toString(16)}${b.toString(16)}`;
+}
 
 export function resolve(parseResult: ParseResult): ProcessorResult<Definition[]> {
     const output: Definition[] = [];
@@ -39,22 +53,60 @@ export function resolve(parseResult: ParseResult): ProcessorResult<Definition[]>
                     throw new ProcessorError("Invalid range bounds, lower bound of the range must be less than the upper bound", item.range);
                 }
 
-                const endIndex = item.inclusive ? to : to - 1;
-
-                const steps = interpolation.steps ?
-                    ((to - from) / interpolation.steps) : 1;
-
-                for (let i = from; i <= endIndex; i += steps) {
-                    resolvedItems.push({ meta: "number", value: i });
+                if (!Number.isInteger(interpolation.steps)) {
+                    throw new ProcessorError("Interpolation steps must be a an integer", item.range);
                 }
 
-                console.log(resolvedItems);
+                if (interpolation.steps && interpolation.steps < 1) {
+                    throw new ProcessorError("Interpolation steps must be above '1'", item.range);
+                }
+
+                const step = interpolation.steps ?
+                    ((to - from) / (interpolation.steps - (item.inclusive ? 1 : 0))) : 1;
+
+
+
+                if (item.inclusive) {
+                    for (let i = from; i <= to; i += step) {
+                        resolvedItems.push({ meta: "number", value: i });
+                    }
+                } else {
+                    for (let i = from; i < to; i += step) {
+                        resolvedItems.push({ meta: "number", value: i });
+                    }
+                }
             };
 
             const fabricateHexRange = (from: string, to: string, interpolation: Interpolation) => {
-                console.log(interpolation);
+                const mode = "FLAT"//interpolation.mode || "FLAT";
+
+                switch (mode) {
+                    case "FLAT": {
+
+                        const colorA = hexToRgb(from);
+                        const colorB = hexToRgb(to);
+
+                        const steps = interpolation.steps || 3;
+
+                        const stepR = ((colorB.r - colorA.r) / (steps));
+                        const stepG = ((colorB.g - colorA.g) / (steps));
+                        const stepB = ((colorB.b - colorA.b) / (steps));
+
+                        for (let i = 0; i < (steps); i++) {
+                            const r = Math.round(colorA.r + (stepR * i));
+                            const g = Math.round(colorA.g + (stepG * i));
+                            const b = Math.round(colorA.b + (stepB * i));
+
+                            resolvedItems.push({ meta: "hex", value: rgbToHex(r, g, b) });
+                        }
+                    } break;
+                }
+
+                //TODO: add other modes
+
             };
 
+            
             switch (fromValue.meta) {
                 case "number": fabricateNumberRange(fromValue.value, toValue.value as number, item.interpolation); break;
                 case "hex": fabricateHexRange(fromValue.value, toValue.value as string, item.interpolation); break;
@@ -92,7 +144,7 @@ export function resolve(parseResult: ParseResult): ProcessorResult<Definition[]>
         }
     };
 
-    // resolveExpression((parseResult.bindings.get("palette")! as ValueLiteralExpression<UnresolvedBlockMetaData>).data.value[2].expression);
+    resolveExpression((parseResult.bindings.get("palette")! as ValueLiteralExpression<UnresolvedBlockMetaData>).data.value[3].expression);
 
     parseResult.definitions.forEach((definition: UnresolvedDefinition) => {
         const signature = definition.signature;

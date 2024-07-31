@@ -122,6 +122,8 @@ export function tokenize(input: string): ProcessorResult<Token[]> {
             } else if (char === ".") {
                 if (previousWasDot) {
                     head.index--;
+                    push(parseInt(input.substring(foot.index - 1, head.index)));
+                    
                     break;
                 } else if (isDecimal) {
                     errors.push(new ProcessorError("Invalid number format", Range.from(foot, head)));

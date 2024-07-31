@@ -4,8 +4,8 @@ let a: { b: "something non-color" };
 let palette: {
     blue: [#007bff, #0056b3, #004b9b, a.b],
     gray: [#f8f9fa, #e9ecef, #dee2e6, #ced4da],
-    dw: [0...10^0.2],
-    white: [#ffffff...#f8f9fa^5:LCH] ~has 5 shades and uses LCH interpolation
+    dw: [0...10^10],
+    white: [#9aed7b...#4154d1^5:LCH] ~has 5 shades and uses LCH interpolation
 };
 
 theme light: {

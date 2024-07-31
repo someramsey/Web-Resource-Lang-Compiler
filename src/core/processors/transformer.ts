@@ -1,12 +1,14 @@
 import { ExpressionExtender, Expression, ValueLiteralExpression } from "../../expression";
 import { Iteration } from "../../iteration";
-import { ArrayItem, ArrayMetaData, BlockMetaData, CompoundMetaData, GroupMetaData, NodeMetaData, Property } from "../../meta";
-import { Range } from "../../range";
+import { ArrayItem, UnresolvedArrayMetaData, UnresolvedBlockMetaData, UnresolvedCompoundMetaData, UnresolvedGroupMetaData, UnresolvedMetaData, Property } from "../../meta";
+import { Position, Range } from "../../range";
 import { ProcessorError } from "../processor";
 import { Token, ValueToken } from "./tokenizer";
 
-export type Node = Token | ValueToken<CompoundMetaData>;
+export type Node = Token | ValueToken<UnresolvedCompoundMetaData>;
 
+//TODO: refactor
+//TODO: only allow to transform a single expression
 export function transform(tokens: Token[]): Expression {
     const iteration = new Iteration(tokens);
 
@@ -69,7 +71,7 @@ export function transform(tokens: Token[]): Expression {
         const node = transform(token);
 
         if (node.kind == "value") {
-            const value: ValueLiteralExpression<NodeMetaData> = {
+            const value: ValueLiteralExpression<UnresolvedMetaData> = {
                 kind: "literal",
                 data: node.data,
                 range: node.range
@@ -97,7 +99,7 @@ export function transform(tokens: Token[]): Expression {
         }
 
         const begin = iteration.current;
-        let data: CompoundMetaData;
+        let data: UnresolvedCompoundMetaData;
 
         switch (token.value) {
             case "(": data = readGroup(); break;
@@ -112,9 +114,10 @@ export function transform(tokens: Token[]): Expression {
         };
     };
 
-    const readGroup = (): GroupMetaData => {
+    const readGroup = (): UnresolvedGroupMetaData => {
         token = iteration.next();
 
+        const beginPos = iteration.current.range.begin;
         const expression = readExpression();
 
         if (token.kind !== "symbol" || token.value !== ")") {
@@ -123,15 +126,19 @@ export function transform(tokens: Token[]): Expression {
 
         return {
             meta: "group",
-            value: expression
+            value: {
+                expression,
+                range: Range.from(beginPos, iteration.last.range.end)
+            }
         };
     };
 
-    const readArray = (): ArrayMetaData => {
+    const readArray = (): UnresolvedArrayMetaData => {
         const items: ArrayItem[] = [];
         const begin = iteration.current;
 
         while (token = iteration.next()) {
+            const beginPos = iteration.current.range.begin;
             const expression = readExpression();
 
             if (token.kind !== "symbol") {
@@ -140,7 +147,10 @@ export function transform(tokens: Token[]): Expression {
 
             switch (token.value) {
                 case "]": {
-                    items.push({ kind: "single", expression });
+                    items.push({
+                        kind: "single", expression,
+                        range: Range.from(beginPos, iteration.last.range.end)
+                    });
 
                     return {
                         meta: "array",
@@ -150,8 +160,8 @@ export function transform(tokens: Token[]): Expression {
 
                 case ",": {
                     items.push({
-                        kind: "single",
-                        expression
+                        kind: "single", expression,
+                        range: Range.from(beginPos, iteration.last.range.end)
                     });
                 } break;
 
@@ -178,7 +188,8 @@ export function transform(tokens: Token[]): Expression {
                             inclusive,
                             from: expression,
                             to: endValueExpression,
-                            steps: token.data.value
+                            steps: token.data.value,
+                            range: Range.from(beginPos, iteration.last.range.end)
                         });
 
                         token = iteration.next();
@@ -188,7 +199,8 @@ export function transform(tokens: Token[]): Expression {
                             inclusive,
                             from: expression,
                             to: endValueExpression,
-                            steps: "unset"
+                            steps: "auto",
+                            range: Range.from(beginPos, iteration.last.range.end)
                         });
                     }
 
@@ -216,7 +228,7 @@ export function transform(tokens: Token[]): Expression {
         throw new ProcessorError("Unclosed array", Range.between(begin, iteration.last));
     };
 
-    const readBlock = (): BlockMetaData => {
+    const readBlock = (): UnresolvedBlockMetaData => {
         const properties: Property[] = [];
         const begin = iteration.current;
 
@@ -254,13 +266,16 @@ export function transform(tokens: Token[]): Expression {
                 } break;
 
                 case "object": {
+                    const beginPos = iteration.current.range.begin;
+
                     properties.push({
-                        key, expression: readExpression()
+                        key, expression: readExpression(),
+                        range: Range.from(beginPos, iteration.last.range.end)
                     });
 
                     state = "seperator";
                     continue;
-                };
+                }
 
                 case "seperator": {
                     if (token.kind !== "symbol" || (token.value !== "," && token.value !== ";")) {

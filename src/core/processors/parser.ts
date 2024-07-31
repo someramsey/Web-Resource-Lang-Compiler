@@ -1,14 +1,20 @@
+import { UnresolvedDefinition } from "../../definition";
 import { Expression } from "../../expression";
-import { Assignment, FontDefinition, ThemeDefinition, UnresolvedDefinition } from "../../instruction";
 import { Iteration } from "../../iteration";
 import { ProcessorError, ProcessorResult } from "../processor";
 import { Token } from "./tokenizer";
 import { transform } from "./transformer";
 
-export function parse(tokens: Token[]): ProcessorResult<UnresolvedDefinition[]> {
+const bindings = new Map<string, Expression>();
+
+
+export type ParseResult = { definitions: UnresolvedDefinition[], bindings: Map<string, Expression> };
+
+export function parse(tokens: Token[]): ProcessorResult<ParseResult> {
     const iteration = new Iteration(tokens);
 
-    const output: UnresolvedDefinition[] = [];
+    const bindings = new Map<string, Expression>();
+    const definitions: UnresolvedDefinition[] = [];
     const errors: ProcessorError[] = [];
 
     const expectIdentifier = (): string => {
@@ -49,7 +55,7 @@ export function parse(tokens: Token[]): ProcessorResult<UnresolvedDefinition[]> 
 
 
     //instructions
-    const parseAssignment = (): Assignment => {
+    const parseAssignment = () => {
         next();
         const identifier = expectIdentifier();
 
@@ -57,18 +63,18 @@ export function parse(tokens: Token[]): ProcessorResult<UnresolvedDefinition[]> 
         expectSymbol(":");
 
         next();
-        const expression = readExpression();
+        const body = readExpression();
 
         expectSymbol(";");
 
-        return {
-            type: "assignment",
-            identifier,
-            body: expression
-        };
+        if (bindings.has(identifier)) {
+            throw new ProcessorError(`Cannot redeclare '${identifier}'`, iteration.current.range);
+        }
+
+        bindings.set(identifier, body);
     };
 
-    const parseThemeDefinition = (): ThemeDefinition<Expression> => {
+    const parseThemeDefinition = () => {
         next();
         const identifier = expectIdentifier();
 
@@ -76,23 +82,24 @@ export function parse(tokens: Token[]): ProcessorResult<UnresolvedDefinition[]> 
         expectSymbol(":");
 
         next();
-        const expression = readExpression();
+        const body = readExpression();
 
-        if (expression.kind != "literal" || expression.data.meta != "block") {
+        if (body.kind != "literal" || body.data.meta != "block") {
             throw new ProcessorError("Expected a block literal", iteration.current.range);
         }
 
         expectSymbol(";");
 
-        return {
-            type: "theme", 
-            identifier,
-            body: expression
-        };
-
+        definitions.push({
+            body,
+            signature: {
+                type: "theme",
+                identifier
+            }
+        });
     };
 
-    const parseFontDefinition = (): FontDefinition<Expression> => {
+    const parseFontDefinition = () => {
         next();
         const identifier = expectIdentifier();
 
@@ -107,10 +114,10 @@ export function parse(tokens: Token[]): ProcessorResult<UnresolvedDefinition[]> 
         }
 
         let source: string | null = null;
-        const current = iteration.current; //to prevent typescript from trying to overlap types after calling next
+        const current = iteration.current;
 
         if (current.kind === "none" && current.value === "from") {
-            next(); //This here cuz readExpression() already has an extra offset
+            next();
 
             if (iteration.current.kind !== "value" || iteration.current.data.meta !== "string") {
                 throw new ProcessorError("Expected a string literal", iteration.current.range);
@@ -122,36 +129,37 @@ export function parse(tokens: Token[]): ProcessorResult<UnresolvedDefinition[]> 
 
         expectSymbol(";");
 
-
-        return {
-            type: "font", 
-            identifier, 
-            source,
-            body
-        };
+        definitions.push({
+            body,
+            signature: {
+                type: "font",
+                identifier,
+                source,
+            }
+        });
     }
 
-    const parse = (): UnresolvedDefinition => {
+    const parse = () => {
         if (iteration.current.kind !== "none") {
             throw new ProcessorError("Unexpected token, expected a statement", iteration.current.range);
         }
 
         switch (iteration.current.value) {
-            case "let": return parseAssignment();
-            case "theme": return parseThemeDefinition();
-            case "font": return parseFontDefinition();
-        }
+            case "let": parseAssignment(); break;
+            case "theme": parseThemeDefinition(); break;
+            case "font": parseFontDefinition(); break;
 
-        throw new ProcessorError("Unknown instruction", iteration.current.range);
+            default: throw new ProcessorError("Unknown instruction", iteration.current.range);
+        }
     }
 
     while (iteration.next()) {
         try {
-            output.push(parse());
+            parse();
         } catch (error) {
             errors.push(error as ProcessorError);
         }
     }
 
-    return { output, errors }
+    return { output: { bindings, definitions }, errors }
 }

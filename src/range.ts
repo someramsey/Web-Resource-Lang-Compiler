@@ -1,5 +1,3 @@
-import { Token } from "./core/processors/tokenizer";
-
 export type Position = {
     column: number;
     line: number;
@@ -19,7 +17,7 @@ export class Range {
         return new Range({ ...begin }, { ...end });
     }
 
-    static between(begin: Token, end: Token) {
+    static between(begin: Ranged, end: Ranged) {
         return new Range(begin.range.begin, end.range.end);
     }
 }

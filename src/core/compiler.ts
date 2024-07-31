@@ -1,4 +1,4 @@
-import { Definition } from "../instruction";
+import { Definition, UnresolvedDefinition } from "../definition";
 import { ProcessorResult } from "./processor";
 import { parse } from "./processors/parser";
 import { resolve } from "./processors/resolver";

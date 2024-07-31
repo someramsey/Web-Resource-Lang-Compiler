@@ -1,6 +1,7 @@
-import { MetaData, PrimeMetaData } from "../../meta";
+import { MetaData } from "../../meta";
 import { ProcessorError, ProcessorResult } from "../processor";
 import { Position, Range, Ranged } from "../../range";
+import { PrimeMetaData } from "../../meta";
 
 const breaks = [" ", "\t", "\n", "\r"];
 const symbols = ["(", ")", "{", "}", "[", "]", ",", ";", ":", "-","^"];

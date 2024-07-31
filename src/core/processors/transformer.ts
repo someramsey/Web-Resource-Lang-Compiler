@@ -176,6 +176,9 @@ export function transform(tokens: Token[]): Expression {
                         throw new ProcessorError("Expected '^' , ']' or coma", token.range);
                     }
 
+                    let interpSteps: number | null = null;
+                    let interpMode: string | null = null;
+
                     if (token.value === "^") {
                         token = iteration.next();
 
@@ -183,26 +186,34 @@ export function transform(tokens: Token[]): Expression {
                             throw new ProcessorError("Expected number", token.range);
                         }
 
-                        items.push({
-                            kind: "range",
-                            inclusive,
-                            from: expression,
-                            to: endValueExpression,
-                            steps: token.data.value,
-                            range: Range.from(beginPos, iteration.last.range.end)
-                        });
+                        interpSteps = token.data.value;
 
                         token = iteration.next();
-                    } else {
-                        items.push({
-                            kind: "range",
-                            inclusive,
-                            from: expression,
-                            to: endValueExpression,
-                            steps: "auto",
-                            range: Range.from(beginPos, iteration.last.range.end)
-                        });
+
+                        if(token.kind === "symbol" && token.value === ":") {
+                            token = iteration.next();
+
+                            if (token.kind !== "none") {
+                                throw new ProcessorError("Expected a transpolation mode", token.range);
+                            }
+
+                            interpMode = token.value;
+
+                            token = iteration.next();
+                        }
                     }
+
+                    items.push({
+                        kind: "range",
+                        inclusive,
+                        from: expression,
+                        to: endValueExpression,
+                        interpolation: {
+                            steps: interpSteps,
+                            mode: interpMode
+                        },
+                        range: Range.from(beginPos, iteration.last.range.end)
+                    });
 
                     if (token.kind !== "symbol") {
                         throw new ProcessorError("Expected comma or ']'", token.range);

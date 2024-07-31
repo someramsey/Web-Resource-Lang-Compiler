@@ -2,7 +2,7 @@ import { Range } from "../../range";
 import { ParseResult } from "./parser";
 import { Definition, UnresolvedDefinition } from "../../definition";
 import { Expression, ValueLiteralExpression } from "../../expression";
-import { ArrayItemStep as ArrayItemSteps, ArrayMetaData, BlockMetaData, GroupMetaData, NodeMetaData, UnresolvedArrayMetaData, UnresolvedBlockMetaData, UnresolvedGroupMetaData } from "../../meta";
+import { Interpolation, ArrayMetaData, BlockMetaData, GroupMetaData, NodeMetaData, UnresolvedArrayMetaData, UnresolvedBlockMetaData, UnresolvedGroupMetaData } from "../../meta";
 import { ProcessorError, ProcessorResult } from "../processor";
 
 export function resolve(parseResult: ParseResult): ProcessorResult<Definition[]> {
@@ -19,11 +19,11 @@ export function resolve(parseResult: ParseResult): ProcessorResult<Definition[]>
     };
 
     const resolveArray = (array: UnresolvedArrayMetaData): ArrayMetaData => {
-        const value: NodeMetaData[] = [];
+        const resolvedItems: NodeMetaData[] = [];
 
         array.value.forEach((item) => {
             if (item.kind == "single") {
-                value.push(resolveExpression(item.expression));
+                resolvedItems.push(resolveExpression(item.expression));
                 return;
             }
 
@@ -34,32 +34,36 @@ export function resolve(parseResult: ParseResult): ProcessorResult<Definition[]>
                 throw new ProcessorError("Ranged item bounds must be of the same kind", item.range);
             }
 
-            const fabricateNumberRange = (from: number, to: number, steps: ArrayItemSteps) => {
+            const fabricateNumberRange = (from: number, to: number, interpolation: Interpolation) => {
                 if (from > to) {
                     throw new ProcessorError("Invalid range bounds, lower bound of the range must be less than the upper bound", item.range);
                 }
 
-                const step = steps !== "auto" ?
-                    ((to - from) / steps) : 1;
+                const endIndex = item.inclusive ? to : to - 1;
 
-                for (let i = from; i <= to; i += step) {
-                    value.push({ meta: "number", value: i });
+                const steps = interpolation.steps ?
+                    ((to - from) / interpolation.steps) : 1;
+
+                for (let i = from; i <= endIndex; i += steps) {
+                    resolvedItems.push({ meta: "number", value: i });
                 }
+
+                console.log(resolvedItems);
             };
 
-            const fabricateHexRange = (from: string, to: string, steps: ArrayItemSteps) => {
-                
-            }
+            const fabricateHexRange = (from: string, to: string, interpolation: Interpolation) => {
+                console.log(interpolation);
+            };
 
             switch (fromValue.meta) {
-                case "number": fabricateNumberRange(fromValue.value, toValue.value as number, item.steps); break;
-                case "hex": fabricateHexRange(fromValue.value, toValue.value as string, item.steps); break;
+                case "number": fabricateNumberRange(fromValue.value, toValue.value as number, item.interpolation); break;
+                case "hex": fabricateHexRange(fromValue.value, toValue.value as string, item.interpolation); break;
 
                 default: throw new ProcessorError("Invalid type for ranged item bounds", item.range);
             }
         })
 
-        return { meta: "array", value };
+        return { meta: "array", value: resolvedItems };
     };
 
     const resolveBlock = (block: UnresolvedBlockMetaData): BlockMetaData => {
@@ -87,6 +91,8 @@ export function resolve(parseResult: ParseResult): ProcessorResult<Definition[]>
             case "reference": throw new Error("Not implemented");
         }
     };
+
+    // resolveExpression((parseResult.bindings.get("palette")! as ValueLiteralExpression<UnresolvedBlockMetaData>).data.value[2].expression);
 
     parseResult.definitions.forEach((definition: UnresolvedDefinition) => {
         const signature = definition.signature;

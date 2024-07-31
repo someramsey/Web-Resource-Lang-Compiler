@@ -1,4 +1,4 @@
-import { Definition, UnresolvedDefinition } from "../definition";
+import { Definition } from "../definition";
 import { ProcessorResult } from "./processor";
 import { parse } from "./processors/parser";
 import { resolve } from "./processors/resolver";
@@ -16,7 +16,7 @@ export function compile(data: string): ProcessorResult<Definition[]> {
     ];
 
     return {
-        output: resolverResult.output, 
+        output: resolverResult.output,
         errors: compilationErrors
     };
 }

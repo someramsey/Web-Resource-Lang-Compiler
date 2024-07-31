@@ -4,7 +4,7 @@ import { Position, Range, Ranged } from "../../range";
 import { PrimeMetaData } from "../../meta";
 
 const breaks = [" ", "\t", "\n", "\r"];
-const symbols = ["(", ")", "{", "}", "[", "]", ",", ";", ":", "-","^"];
+const symbols = ["(", ")", "{", "}", "[", "]", ",", ";", ":", "-", "^"];
 const digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 const stringIndicators = ["'", '"'];
 const hexChars = ["a", "b", "c", "d", "e", "f", "A", "B", "C", "D", "E", "F", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
@@ -100,19 +100,48 @@ export function tokenize(input: string): ProcessorResult<Token[]> {
     };
 
     const number = () => {
+        const push = (value: number) => {
+            output.push({
+                kind: "value",
+                data: {
+                    meta: "number",
+                    value
+                },
+                range: Range.from(foot, head)
+            });
+        };
+
+        let isDecimal = false;
+        let previousWasDot = false;
+
         while (head.index < input.length) {
             const char = input[head.index];
 
-            if (!digits.includes(char)) {
-                output.push({
-                    kind: "value",
-                    data: {
-                        meta: "number",
-                        value: parseInt(input.substring(foot.index - 1, head.index)),
-                    },
-                    range: Range.from(foot, head)
-                });
+            if (digits.includes(char)) {
+                previousWasDot = false;
+            } else if (char === ".") {
+                if (previousWasDot) {
+                    head.index--;
+                    break;
+                } else if (isDecimal) {
+                    errors.push(new ProcessorError("Invalid number format", Range.from(foot, head)));
 
+                    while (head.index < input.length && (digits.includes(input[head.index]) || input[head.index] === ".")) {
+                        head.index++;
+                    }
+
+                    break;
+                }
+
+                isDecimal = true;
+                previousWasDot = true;
+            } else {
+                if (previousWasDot) {
+                    errors.push(new ProcessorError("Invalid number format", Range.from(foot, head)));
+                    break;
+                }
+
+                push(parseFloat(input.substring(foot.index - 1, head.index)));
                 break;
             }
 
@@ -163,7 +192,7 @@ export function tokenize(input: string): ProcessorResult<Token[]> {
     };
 
     const pushUncaptured = () => {
-        const length = head.index - foot.index - 1 ;
+        const length = head.index - foot.index - 1;
 
         if (!captured && length > 0) {
             output.push({

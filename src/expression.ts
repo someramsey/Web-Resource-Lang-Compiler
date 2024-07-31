@@ -1,5 +1,5 @@
-import { NodeMetaData } from "./meta";
-import { Range } from "./range";
+import { UnresolvedMetaData } from "./meta";
+import { Range, Ranged } from "./range";
 
 //Expression extenders
 export type AcessorExpression = { kind: "acessor"; name: string; };
@@ -8,17 +8,15 @@ export type IndexerExpression = { kind: "indexer"; expression: Expression; };
 export type ExpressionExtender = AcessorExpression | IndexerExpression;
 
 //Expressions
-export type ReferenceExpression = {
+export interface ReferenceExpression extends Ranged {
     kind: "reference";
     name: string;
     extenders: ExpressionExtender[];
-    range: Range;
-};
-
-export interface ValueLiteralExpression<T extends NodeMetaData = NodeMetaData> {
-    kind: "literal";
-    data: T;
-    range: Range;
 }
 
-export type Expression = ReferenceExpression | ValueLiteralExpression<NodeMetaData>;
+export interface ValueLiteralExpression<T extends UnresolvedMetaData = UnresolvedMetaData> extends Ranged {
+    kind: "literal";
+    data: T;
+};
+
+export type Expression = ReferenceExpression | ValueLiteralExpression<UnresolvedMetaData>;

@@ -190,7 +190,7 @@ export function transform(tokens: Token[]): Expression {
 
                         token = iteration.next();
 
-                        if(token.kind === "symbol" && token.value === ":") {
+                        if (token.kind === "symbol" && token.value === ":") {
                             token = iteration.next();
 
                             if (token.kind !== "none") {

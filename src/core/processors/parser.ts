@@ -91,11 +91,9 @@ export function parse(tokens: Token[]): ProcessorResult<ParseResult> {
         expectSymbol(";");
 
         definitions.push({
-            body,
-            signature: {
-                type: "theme",
-                identifier
-            }
+            type: "theme",
+            identifier,
+            body
         });
     };
 
@@ -130,12 +128,10 @@ export function parse(tokens: Token[]): ProcessorResult<ParseResult> {
         expectSymbol(";");
 
         definitions.push({
-            body,
-            signature: {
-                type: "font",
-                identifier,
-                source,
-            }
+            type: "font",
+            identifier,
+            source,
+            body
         });
     }
 

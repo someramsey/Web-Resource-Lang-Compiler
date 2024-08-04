@@ -1,11 +1,14 @@
-~some other comment
-let a: { b: "something non-color" };
+~some comment
+let a: { b: "something non-color", c: palette.num };
 
 let palette: {
     blue: [#007bff, #0056b3, #004b9b, a.b],
     gray: [#f8f9fa, #e9ecef, #dee2e6, #ced4da],
     dw: [0...10^10],
-    white: [#9aed7b...#4154d1^5:LCH] ~has 5 shades and uses LCH interpolation
+    white: [#9aed7b...#4154d1^5:FLAT], ~has 5 shades and uses LCH interpolation
+    num: 10,
+    selfA: palette.selfB,
+    selfB: #000000
 };
 
 theme light: {
@@ -31,14 +34,6 @@ theme dark: {
 };
 
 font montserrat: {
-    weights: [100...900], ~automatically has 9 weights
-    style: all,
+    weights: [1...9], ~automatically has 9 weights
+    style: "all"
 } from 'url';
-
-
-
-
-~ defaults: {
-~     font: montserrat,
-~     theme: light
-~ };

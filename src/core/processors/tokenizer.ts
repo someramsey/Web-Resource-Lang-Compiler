@@ -215,7 +215,6 @@ export function tokenize(input: string): ProcessorResult<Token[]> {
 
         if (char === "\r") {
             head.column = 0;
-            continue;
         } else if (char === "\n") {
             head.line++;
             head.column = 0;

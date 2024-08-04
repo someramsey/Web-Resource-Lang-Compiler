@@ -1,29 +1,32 @@
 import { Expression } from "./expression";
 import { BlockMetaData } from "./meta";
 
-export type ThemeSignature = {
+export type ThemeDefinition<T extends BlockMetaData | Expression> = {
     type: "theme";
     identifier: string;
+    body: T;
 };
 
-export type FontSignature = {
+export type FontDefinition<T extends FontOptions | Expression> = {
     type: "font";
     identifier: string;
     source: string | null;
+    body: T;
 };
+
+export const FontStyles = ["normal", "italic", "oblique", "all"] as const;
+export type FontStyle = typeof FontStyles[number];
 
 export type FontOptions = {
     weights: number[] | null;
-    style: "normal" | "italic" | "oblique" | null;
+    style: FontStyle[] | null;
 };
 
-type BaseDefinition<TSignature, TBody> = { signature: TSignature; body: TBody; };
+export type Definition =
+    ThemeDefinition<BlockMetaData> |
+    FontDefinition<FontOptions>;
 
-export type Signature = ThemeSignature | FontSignature;
-
-export type Definition<TSignature extends Signature = Signature> =
-    TSignature extends ThemeSignature ? BaseDefinition<ThemeSignature, BlockMetaData> :
-    TSignature extends FontSignature ? BaseDefinition<FontSignature, FontOptions> :
-    never;
-
-export type UnresolvedDefinition = BaseDefinition<Signature, Expression>;
+export type UnresolvedDefinition = 
+    ThemeDefinition<Expression> |
+    FontDefinition<Expression>;
+    

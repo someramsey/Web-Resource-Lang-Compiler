@@ -1,5 +1,5 @@
 import { UnresolvedMetaData } from "./meta";
-import { Range, Ranged } from "./range";
+import { Ranged } from "./range";
 
 //Expression extenders
 export type AcessorExpression = { kind: "acessor"; name: string; };

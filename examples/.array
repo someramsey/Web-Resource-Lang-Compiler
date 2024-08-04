@@ -1,0 +1,20 @@
+~Array Examples
+
+let arr: [1, 2, 3, 4, 5];
+
+let exclusive: [1...5]; ~ Resolves to [1, 2, 3, 4]
+
+let inclusive: [1..5]; ~ Resolves to [1, 2, 3, 4, 5]
+
+let stepping: [0...10^5]; ~ Has 5 steps and so resolves to [2, 4, 6, 8]
+
+let color: [#ff0000...#00ff00^5:FLAT]; ~ Has 5 shades and uses default interpolation on RGB space
+
+~Assignments aren't resolved unless they are used in a definition, this is just to show them in the output
+theme out: {
+    normal: arr,
+    exclusive: exclusive,
+    inclusive: inclusive,
+    stepping: stepping,
+    color: color
+};

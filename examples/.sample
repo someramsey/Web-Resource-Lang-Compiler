@@ -1,0 +1,39 @@
+~Actually useful example
+
+let palette: { 
+    primary: #ff0000,
+    secondary: #00ff00,
+    white: [#9aed7b...#4154d1^5], ~has 5 shades and uses default interpolation which is FLAT
+    gray: [#9aed7b...#4154d1^10:FLAT], ~has 10 shades and directly specifies FLAT interpolation
+    blue: [#ff0000...#00ff00^5, #0000ff, #ff00ff...#0000ff^5]
+};
+
+let defaultWeights: [4..8]; ~ Resolves to [4, 5, 6, 7, 8]
+
+theme light: {
+    background: palette.white[0],
+    text: palette.gray[1],
+    button: {
+        active: palette.primary,
+        disabled: palette.gray[3],
+    }
+};
+
+theme dark: {
+    background: palette.gray[9],
+    text: palette.white[5],
+    button: {
+        active: palette.secondary,
+        disabled: palette.gray[7],
+    }
+};
+
+font montserrat: {
+    weights: defaultWeights,
+    style: "all"
+} from 'url';
+
+font roboto: {
+    weights: [2..9],
+    style: ["normal", "italic"]
+} from 'other-url';

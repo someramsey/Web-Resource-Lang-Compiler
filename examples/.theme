@@ -1,4 +1,5 @@
-~some comment
+~Theme Example
+
 let someColor: #ff0000;
 
 theme light: {
@@ -10,5 +11,17 @@ theme light: {
             color: #ff00ff
         },
         ranged: [#ff0000...#00ff00^5, #0000ff, #ff00ff...#0000ff]
+    }
+};
+
+theme someOtherTheme: {
+    primary: #ff0000,
+    secondary: #00ff00,
+    something: {
+        a: #0000ff,
+        nested: {
+            color: #ff00ff
+        },
+        ranged: [#ff0000...#0000ff^10]
     }
 };

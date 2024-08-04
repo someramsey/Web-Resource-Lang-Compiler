@@ -1,5 +1,20 @@
 {
-  "version": "1.0.0",
-  "main": "out/index.js",
-  "license": "ISC"
+    "name": "resource-lang-compiler",
+    "version": "1.0.0",
+    "description": "A compiler written in typescript for the resource-lang language",
+    "devDependencies": {
+        "typescript": "^5.5.4"
+    },
+    "scripts": {
+        "build": "tsc",
+        "watch": "tsc -w",
+        "test-basic": "node out\\tests\\basic"
+    },
+    "keywords": [
+        "compiler",
+        "resource-lang",
+        "typescript"
+    ],
+    "author": "Ramsey",
+    "license": "ISC"
 }

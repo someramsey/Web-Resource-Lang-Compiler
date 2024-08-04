@@ -4,7 +4,9 @@ import { parse } from "./processors/parser";
 import { resolve } from "./processors/resolver";
 import { tokenize } from "./processors/tokenizer";
 
-export function compile(data: string): ProcessorResult<Definition[]> {
+export type CompilationResult = ProcessorResult<Definition[]>;
+
+export function compile(data: string): CompilationResult {
     const tokenizationResult = tokenize(data);
     const parserResult = parse(tokenizationResult.output);
     const resolverResult = resolve(parserResult.output);

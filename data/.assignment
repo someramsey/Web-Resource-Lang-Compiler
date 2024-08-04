@@ -1,6 +1,0 @@
-~comment
-let from: { n: [0,10] };
-let to: 200;
-let c: [10, (from.n[1])...to, 200..300, a.c];
-let a: { a: 'a', b: 10, c: c[0], d: 20 };
-let b: a.b;

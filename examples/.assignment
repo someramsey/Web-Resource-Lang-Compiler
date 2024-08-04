@@ -1,0 +1,29 @@
+~Complex Assignment Example
+
+let string: "a";
+let number: 10;
+let color: #ff0000;
+
+let array: [string, number, color, "something else"];
+
+let block: {
+    a: string,
+    b: number,
+    c: color,
+};
+
+let otherBlock: {
+    a: 10,
+    b: otherBlock.a,
+    c: [10, otherBlock.a...20, 200...300^10, array[2]]
+};
+
+let item: array[0]; ~ Resolves to "a"
+
+~Assignments aren't resolved unless they are used in a definition, this is just to show them in the output
+theme out: {
+    array: array,
+    block: block,
+    otherBlock: otherBlock,
+    item: item
+};

@@ -62,7 +62,7 @@ export function resolve(parseResult: ParseResult): ProcessorResult<Definition[]>
                         throw new ProcessorError(`Interpolation steps must be a an integer, found ${interpolation.steps}`, item.range);
                     }
                 }
-                
+
                 const step = interpolation.steps ?
                     ((to - from) / (interpolation.steps - (item.inclusive ? 1 : 0))) : 1;
 
@@ -231,7 +231,7 @@ export function resolve(parseResult: ParseResult): ProcessorResult<Definition[]>
 
     // // resolveExpression((parseResult.bindings.get("palette")! as ValueLiteralExpression<UnresolvedBlockMetaData>).data.value[3].expression);
     // console.log(resolveExpression(parseResult.bindings.get("palette")!));
-    
+
     const resolveDefinition = (definition: UnresolvedDefinition): Definition => {
         switch (definition.type) {
             case "theme": {
@@ -294,7 +294,7 @@ export function resolve(parseResult: ParseResult): ProcessorResult<Definition[]>
                         throw new ProcessorError(`Invalid font weight value, (${data.meta}) ${data.value}`, definition.body.range);
                     }
 
-                    if(data.value < 1 || data.value > 9) {
+                    if (data.value < 1 || data.value > 9) {
                         throw new ProcessorError(`Invalid font weight '${data.value}', expected a value between 1 and 9`, definition.body.range);
                     }
 

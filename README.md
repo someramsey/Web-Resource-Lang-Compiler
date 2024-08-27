@@ -71,4 +71,5 @@ You need typescript installed to build the project.
 - Run `npm run build`
 
 There is already an existing script that runs the compiler with one of the example files. You can run it with `npm run test-basic <file>`
+
 ![image](https://github.com/user-attachments/assets/52c5ba2b-bea7-4dad-bb5a-d7bcf743e68a)
